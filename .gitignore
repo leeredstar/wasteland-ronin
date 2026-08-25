@@ -8,3 +8,9 @@ ehthumbs.db
 
 # 日志
 *.log
+
+# codemod 产生的重复文件（扩展名被拼重，如 Map.js.js）
+*.js.js
+
+# 开发/平衡草稿文档
+outputs/

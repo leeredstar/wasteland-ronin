@@ -114,7 +114,8 @@
 
     // 伤害结算
     var au = armsUsableCount(a);
-    var raw = rollRawDamage(a.weapon.dmg, a.skills.str, au);
+    var strEff = _env.effectiveStr ? _env.effectiveStr(a) : a.skills.str;
+    var raw = rollRawDamage(a.weapon.dmg, strEff, au);
     var dmg = finalDamage(raw, d.armor ? d.armor.def : 0);
     var part = pickPart();
 

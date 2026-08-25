@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-25T00:58:23.235Z",
+ "updatedAt": "2026-08-25T01:40:50.504Z",
  "total": 500,
- "done": 76,
+ "done": 123,
  "phases": [
   {
    "id": "M0",
@@ -684,8 +684,8 @@
    "phase": "M2",
    "phaseName": "生存与部位伤害深化",
    "title": "义肢力量+2 通过 Skills 修正器实现（非直接改值）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:04:43.767Z"
   },
   {
    "id": "T075",
@@ -708,8 +708,8 @@
    "phase": "M2",
    "phaseName": "生存与部位伤害深化",
    "title": "义肢商店安装逻辑迁移 Economy（自动寻找缺失部位）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:04:43.767Z"
   },
   {
    "id": "T078",
@@ -724,8 +724,8 @@
    "phase": "M2",
    "phaseName": "生存与部位伤害深化",
    "title": "手测清单：截断→买义肢→再战斗 全流程回归",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:05:24.851Z"
   },
   {
    "id": "T080",
@@ -740,352 +740,352 @@
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "data/items.js Schema 设计（id/name/type/price/stack/effect）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T082",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "现有消耗品入表：干粮/绷带/营地套装/建材",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T083",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "全部武器入表：fists/stick/iron/spear/mace/katana",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T084",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "护甲入表：leather/chain（含 def 减伤值）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T085",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "机械义肢入表（roboLimb）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T086",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "data/enemies.js Schema（hp/技能/武器/掉落/aggro/速度）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T087",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "迁移四种人类敌人：饥饿强盗/强盗/荒原剑客/强盗头目",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T088",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "狼群 beast 定义（速度/撕咬/低血逃跑阈值）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T089",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "城镇卫兵 guard 定义（巡逻/装备/leash 半径）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T090",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "data/skills.js：四技能成长参数与上限",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T091",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "创建 data/balance.js 并完成首批 30 项魔法数字审计搬迁",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T092",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "商店货单由 towns 配置驱动（每镇不同商品）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:21:07.105Z"
   },
   {
    "id": "T093",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "掉落表 lootTable 机制（猫币区间/食物概率/稀有物）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:21:07.105Z"
   },
   {
    "id": "T094",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "物品图标映射表（emoji 皮肤层，便于日后换美术）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:14:01.125Z"
   },
   {
    "id": "T095",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "MOD 支持：允许 JSON 覆盖包加载 loadDataOverrides()",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:27:31.819Z"
   },
   {
    "id": "T096",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "数据校验器 validateData：必填字段/数值范围/引用完整性",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:27:31.819Z"
   },
   {
    "id": "T097",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "单测：items 表通过 validateData 校验",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:27:31.819Z"
   },
   {
    "id": "T098",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "单测：enemies 强度随出生距离单调不减",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:27:31.819Z"
   },
   {
    "id": "T099",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "平衡文档：开局资源（kits1/mats2/cats120）合理性说明",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:27:31.819Z"
   },
   {
    "id": "T100",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "工具：自动导出全价格表 outputs/prices.md",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:27:31.819Z"
   },
   {
    "id": "T101",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "工具：敌人强度-距离曲线图 outputs/curve.md",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:27:31.819Z"
   },
   {
    "id": "T102",
    "phase": "M3",
    "phaseName": "数据驱动内容管线",
    "title": "M3 门禁：新增一件商品只需改数据文件、零代码改动",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:27:31.819Z"
   },
   {
    "id": "T103",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "Inventory 装备槽位实现（weapon/armor/义肢位独立）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:34:36.708Z"
   },
   {
    "id": "T104",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "背包容量与超重规则（简化重量模型）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:34:36.708Z"
   },
   {
    "id": "T105",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "拾取改为进入最近队员背包（替代全局资源池）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:34:36.708Z"
   },
   {
    "id": "T106",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "设计文档：全局资源 vs 个人背包双轨制边界",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:37:42.064Z"
   },
   {
    "id": "T107",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "商店买卖全部改走 Inventory API",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T108",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "卖出通道：战利品类物品可半价售出",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T109",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "供需浮动价格雏形：销量计数影响 ±15%",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T110",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "招募费用递增公式：随队伍规模上涨",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:37:42.064Z"
   },
   {
    "id": "T111",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "奴隶搬运目的地升级：最近的储物箱/营地",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:34:36.708Z"
   },
   {
    "id": "T112",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "新建建筑：储物箱（承接背包溢出与搬运存放）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:34:36.708Z"
   },
   {
    "id": "T113",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "掉落物合并：同类相邻自动堆叠",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:34:36.708Z"
   },
   {
    "id": "T114",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "钱袋可视化分级（小额/中额/大额外观差异）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:34:36.708Z"
   },
   {
    "id": "T115",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "单测：买入卖出金额守恒（含折扣路径）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T116",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "单测：背包堆叠到达上限后开新格",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T117",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "单测：供需浮动的上下界钳制",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T118",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "经济模拟脚本 outputs/econ-sim.js：击杀收支曲线",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T119",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "商店 UI 显示单价与折扣来源（声望/供需标注）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T120",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "交易日志：最近 5 笔买卖入 HUD 信息流",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:40:26.788Z"
   },
   {
    "id": "T121",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "单测：奴隶搬运的目标选择策略",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T122",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "UI：义肢安装不可逆操作的二次确认",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:39:38.718Z"
   },
   {
    "id": "T123",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "平衡复核：义肢定价（依据 econ-sim 输出调整）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:40:26.788Z"
   },
   {
    "id": "T124",
    "phase": "M4",
    "phaseName": "经济·背包·贸易",
    "title": "M4 门禁：打怪→拾取→搬运→卖钱→购物 全闭环验收",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T01:40:50.504Z"
   },
   {
    "id": "T125",
