@@ -3498,8 +3498,10 @@ function drawUnits() {
 }
 
 function drawParticlesAndTexts() {
+  /* T148: 视口裁剪全覆盖——粒子/光环/飘字三层 */
   for (var i = 0; i < particles.length; i++) {
     var p = particles[i];
+    if (!inView(p.x, p.y, 20)) continue;
     ctx.globalAlpha = clamp(p.life / p.maxLife, 0, 1);
     ctx.fillStyle = p.color;
     ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
@@ -3508,6 +3510,7 @@ function drawParticlesAndTexts() {
 
   for (var r = 0; r < rings.length; r++) {
     var rg = rings[r];
+    if (!inView(rg.x, rg.y, 40)) continue;
     var pr = rg.t / 0.5;
     ctx.globalAlpha = 1 - pr;
     ctx.strokeStyle = '#ffe9ad';
@@ -3522,6 +3525,7 @@ function drawParticlesAndTexts() {
   ctx.textAlign = 'center';
   for (var t = 0; t < texts.length; t++) {
     var tx = texts[t];
+    if (!inView(tx.x, tx.y, 60)) continue;
     var tp = tx.t / tx.life;
     ctx.globalAlpha = 1 - tp * tp;
     ctx.lineWidth = 3;

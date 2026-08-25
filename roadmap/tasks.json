@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-25T23:21:55.786Z",
+ "updatedAt": "2026-08-25T23:38:53.349Z",
  "total": 500,
- "done": 147,
+ "done": 152,
  "phases": [
   {
    "id": "M0",
@@ -1276,40 +1276,40 @@
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "视口裁剪审计：装饰/实体/粒子三层全覆盖",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:38:53.143Z"
   },
   {
    "id": "T149",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "静态地形离屏缓存：512 分块按需生成",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:38:53.199Z"
   },
   {
    "id": "T150",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "性能目标：首次世界生成 <300ms",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:38:53.246Z"
   },
   {
    "id": "T151",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "单测：群系函数纯度（同种子同输出）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:38:53.300Z"
   },
   {
    "id": "T152",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "M5 门禁：完成一条 10 分钟步行探索路线并截图存 outputs/",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:38:53.349Z"
   },
   {
    "id": "T153",
