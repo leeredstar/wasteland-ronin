@@ -1,0 +1,19 @@
+{
+  "name": "wasteland-ronin",
+  "version": "0.4.0",
+  "private": true,
+  "description": "荒原浪人 — 类Kenshi多人在线沙盒生存游戏（2D逻辑层 + 3D表现层演进中）",
+  "scripts": {
+    "smoke": "node test-smoke.js",
+    "roadmap": "node roadmap/tasks.source.js",
+    "progress": "node roadmap/progress.js",
+    "audit:dom": "node tools/dom-audit.js",
+    "audit:random": "node tools/random-audit.js",
+    "baseline": "node tools/baseline.js",
+    "trace": "node test/debug-trace.js 15",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  }
+}

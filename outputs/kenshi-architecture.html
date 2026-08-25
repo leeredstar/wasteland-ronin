@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name  ="viewport" content="width=device-width, initial-scale=1.0">
+<title>仿 Kenshi 网页游戏 · 架构设计</title>
+<style>
+  :root{
+    --bg:#12100c; --panel:#1c1610; --panel2:#241c12; --line:#6b5836;
+    --text:#e8dcc0; --dim:#b09a6a; --gold:#ffd97a; --red:#e0604c; --teal:#7fd06a; --blue:#8fb8d8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;line-height:1.7;padding:32px;}
+  h1{color:var(--gold);letter-spacing:4px;font-size:30px;margin-bottom:6px}
+  h2{color:var(--gold);margin:34px 0 14px;font-size:20px;border-left:4px solid var(--line);padding-left:10px}
+  h3{color:#d8c48e;margin:18px 0 8px;font-size:15px}
+  p{margin:8px 0;color:#d9cba8}
+  .sub{color:var(--dim);font-size:13px;letter-spacing:2px;margin-bottom:24px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin:14px 0;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0}
+  .mod{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .mod h4{color:var(--gold);font-size:15px;margin-bottom:6px}
+  .mod .tag{display:inline-block;font-size:11px;color:var(--bg);background:var(--gold);border-radius:4px;padding:1px 7px;margin-bottom:8px}
+  .mod ul{list-style:none;font-size:13px;color:#cfbf98}
+  .mod li{padding:3px 0;border-bottom:1px dashed rgba(107,88,54,.3)}
+  .mod li::before{content:"▸ ";color:var(--gold)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{background:var(--panel2);color:var(--gold)}
+  td:first-child{color:var(--gold);white-space:nowrap;width:170px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;border:1px solid var(--line);margin:2px}
+  .warn{color:var(--red)} .ok{color:var(--teal)} .info{color:var(--blue)}
+  code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;color:var(--gold);font-size:13px}
+  .foot{margin-top:30px;color:var(--dim);font-size:12px}
+  svg text{font-family:inherit}
+</style>
+</head>
+<body>
+
+<h1>荒原浪人 · 架构设计</h1>
+<p class="sub">WASTELAND RONIN — 仿 Kenshi 网页沙盒生存游戏的模块拆分与各维度考量</p>
+
+<div class="card">
+  <p>你的目录已经是一个能跑的雏形（<code>index.html</code> + <code>js/game.js</code> + <code>css/style.css</code>，外加两个 Node 无头测试脚本）。它证明了核心可行：部位独立血量、技能随用随涨、扎营/睡眠/商店/狼群AI。下面是把这套东西<strong>设计得更稳、更好扩展</strong>的方式。</p>
+</div>
+
+<h2>一、整体分层</h2>
+<p>把"能画什么"和"算什么"彻底分开。表现层只负责把状态画出来，逻辑层只算规则，数据层只存配置与存档。这样逻辑可被无头测试复用（你那两个脚本已经这么干了）。</p>
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
+  <rect x="290" y="10" width="180" height="44" rx="8" fill="#241c12" stroke="#6b5836"/>
+  <text x="380" y="37" fill="#ffd97a" text-anchor="middle" font-size="15">表现层 Presentation</text>
+
+  <rect x="40" y="90" width="180" height="110" rx="10" fill="#1c1610" stroke="#6b5836"/>
+  <text x="130" y="112" fill="#ffd97a" text-anchor="middle" font-size="13">逻辑层 Game Logic</text>
+  <text x="130" y="138" fill="#cfbf98" text-anchor="middle" font-size="12">Systems（系统）</text>
+  <text x="130" y="158" fill="#cfbf98" text-anchor="middle" font-size="12">tick 驱动</text>
+  <text x="130" y="178" fill="#cfbf98" text-anchor="middle" font-size="12">无头可测</text>
+
+  <rect x="290" y="90" width="180" height="110" rx="10" fill="#1c1610" stroke="#6b5836"/>
+  <text x="380" y="112" fill="#ffd97a" text-anchor="middle" font-size="13">数据层 Data</text>
+  <text x="380" y="138" fill="#cfbf98" text-anchor="middle" font-size="12">静态配置</text>
+  <text x="380" y="158" fill="#cfbf98" text-anchor="middle" font-size="12">存档 / 随机种子</text>
+  <text x="380" y="178" fill="#cfbf98" text-anchor="middle" font-size="12">MOD 友好</text>
+
+  <rect x="540" y="90" width="180" height="110" rx="10" fill="#1c1610" stroke="#6b5836"/>
+  <text x="630" y="112" fill="#ffd97a" text-anchor="  middle" font-size="13">输入层 Input</text>
+  <text x="630" y="138" fill="#cfbf98" text-anchor="middle" font-size="12">鼠标/键盘</text>
+  <text x="630" y="158" fill="#cfbf98" text-anchor="middle" font-size="12">相机跟随</text>
+  <text x="630" y="178" fill="#cfbf98" text-anchor="middle" font-size="12">框选/快捷键</text>
+
+  <line x1="380" y1="54" x2="130" y2="90" stroke="#6b5836" stroke-width="1.5"/>
+  <line x1="380" y1="54" x2="380" y2="90" stroke="#6b5836" stroke-width="1.5"/>
+  <line x1="380" y1="54" x2="630" y2="90" stroke="#6b5836" stroke-width="1.5"/>
+  <text x="380" y="210" fill="#b09a6a" text-anchor="middle" font-size="12">表现层向下读取逻辑状态，不反向写逻辑</text>
+</svg>
+
+<h2>二、核心模块拆分</h2>
+<p>把当前挤在 <code>game.js</code> 里的东西，按职责拆成可独立测试、可独立替换的模块。每个模块只回答"这一类事怎么做"，不关心其它模块。</p>
+
+<div class="grid">
+  <div class="mod">
+    <span class="tag">Engine</span>
+    <h4>引擎与循环</h4>
+    <ul>
+      <li>固定步长 tick（如 60Hz），dt 驱动一切</li>
+      <li>渲染循环与逻辑循环分离</li>
+      <li>对象池、脏标记、离屏缓存</li>
+      <li>暴露 debug hook 供无头测试</li>
+    </ul>
+  </div>
+  <div class="mod">
+    <span class="tag">World</span>
+    <h4>世界与地图</h4>
+    <ul>
+      <li>坐标世界 + 网格空间分区</li>
+      <li>地形、建筑、可交互点（商店/营火）</li>
+      <li>按距离生成更强敌人（枢纽镇越远越凶）</li>
+      <li>昼夜时间推进</li>
+    </ul>
+  </div>
+  <div class="mod">
+    <span class="tag">Actor</span>
+    <h4>实体 / 角色</h4>
+    <ul>
+      <li>Unit：阵营、坐标、状态机</li>
+      <li>身体六部位独立血量（头/胸/双臂/双腿）</li>
+      <li>技能：力量/韧性/闪避/近战（按需成长）</li>
+      <li>装备、背包、buff/流血</li>
+    </ul>
+  </div>
+  <div class="mod">
+    <span class="tag">Combat</span>
+    <h4>战斗系统</h4>
+    <ul>
+      <li>命中部位判定（随机权重）</li>
+      <li>伤害→部位，胸腔归零倒地、头部归零昏迷</li>
+      <li>流血/自愈规则</li>
+      <li>俘虏、救援、搬运战利品</li>
+    </ul>
+  </div>
+  <div class="mod">
+    <span class="tag">AI</span>
+    <h4>AI 与行为</h4>
+    <ul>
+      <li>敌人状态机：巡逻/追击/攻击/逃跑</li>
+      <li>小队指令：移动/攻击/原地/扎营</li>
+      <li>狼群敌对所有、可被当诱饵</li>
+      <li>寻路（A* 或网格贪心）</li>
+,    </ul>
+  </div>
+  <div class="mod">
+    <span class="tag">Survival</span>
+    <h4>生存系统</h4>
+    <ul>
+      <li>饥饿：饱食度随时间下降，归零掉血</li>
+      <li>绷带处理伤口、营火睡眠恢复</li>
+      <li>建材建造围墙/篝火</li>
+      <li>资源（猫币/干粮/绷带/建材）</li>
+    </ul>
+  </div>
+  <div class="mod">
+    <span class="tag">Economy</span>
+    <h4>经济与物品</h4>
+    <ul>
+      <li>物品定义表（数据驱动）</li>
+      <li>商店买卖、招募</li>
+      <li>掉落 / 战利品结算</li>
+      <li>价格随供需浮动（可选）</li>
+    </ul>
+  </div>
+  <div class="mod">
+    <span class="tag">UI</span>
+    <h4>界面与 HUD</h4>
+    <ul>
+      <li>资源栏、选中面板、小地图</li>
+      <li>小队栏、事件日志、商店弹窗</li>
+      <li>悬停提示、覆盖层（帮助/睡眠/结束）</li>
+      <li>纯 DOM，状态注入，不写逻辑</li>
+    </ul>
+  </div>
+  <div class="mod">
+    <span class="tag">Save</span>
+    <h4>存档 / 读档</h4>
+    <ul>
+      <li>localStorage 序列化世界状态</li>
+      <li>随机种子可复现</li>
+      <li>版本兼容（validFrom 思路）</li>
+    </ul>
+  </div>
+</div>
+
+<h2>三、实体数据模型（身体部位系统）</h2>
+<p>Kenshi 的灵魂是"部位独立受伤"。角色不是单血条，而是六个部位各有 HP，这直接影响行动力（手臂伤=挥击弱、腿伤=跑不动、胸归零=倒地流血、头归零=昏迷）。</p>
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
+  <!-- unit box -->
+  <rect x="250" y="20" width="260" height="200" rx="12" fill="#1c1610" stroke="#6b5836"/>
+  <text x="380" y="44" fill="#ffd97a" text-anchor="middle" font-size="14">Unit（角色实例）</text>
+
+  <rect x="270" y="58" width="220" height="26" rx="5" fill="#241c12" stroke="#6b5836"/>
+  <text x="380" y="76" fill="#cfbf98" text-anchor="middle" font-size="12">faction · position(x,y) · state</text>
+
+  <!-- body parts -->
+  <circle cx="380" cy="120" r="14" fill="#8fb8d8"/> <text x="380" y="124" fill="#12100c" text-anchor="middle" font-size="10">头</text>
+  <rect x="350" y="140" width="60" height="56" rx="6" fill="#7fd06a"/> <text x="380" y="172" fill="#12100c" text-anchor="middle" font-size="11">胸</text>
+  <rect x="318" y="146" width="26" height="44" rx="5" fill="#cfd08a"/> <text x="331" y="170" fill="#12100c" text-anchor="middle" font-size="9">左臂</text>
+  <rect x="416" y=" 146" width="26" height="44" rx="5" fill="#cfd08a"/> <text x="429" y="170" fill="#12100c" text-anchor="middle" font-size="9">右臂</text>
+  <rect x="348" y="198" width="26" height="20" rx="4" fill="#cfd08a"/> <text x="361" y="212" fill="#12100c" text-anchor="middle" font-size="9">左腿</text>
+  <rect x="386" y="198" width="26" height="20" rx="4" fill="#cfd08a"/> <text x="399" y="212" fill="#12100c" text-anchor="middle" font-size="9">右腿</text>
+
+  <!-- skills -->
+  <rect x="30" y="60" width="180" height="150" rx="10" fill="#1c1610" stroke="#6b5836"/>
+  <text x="120" y="84" fill="#ffd97a" text-anchor="middle" font-size="13">技能（随用随涨）</text>
+  <text x="40" y="112" fill="#cfbf98" font-size="12">力量 STR</text>
+  <text x="40" y="138" fill="#cfbf98" font-size="12">韧性 TOU → 抗伤</text>
+  <text x="40" y="164" fill="#cfbf98" font-size="12">闪避 DODGE → 被追涨</text>
+  <text x="40" y="190" fill="#cfbf98" font-size="12">近战 MELEE → 挥刀涨</text>
+
+  <!-- equipment -->
+  <rect x="550" y="60" width="180" height="150" rx="10" fill="#1c1610" stroke="#6b5836"/>
+  <text x="640" y="84" fill="#ffd97a" text-anchor="middle" font-size="13">装备 / 状态</text>
+  <text x="560" y="112" fill="#cfbf98" font-size="12">武器 weapon</text>
+  <text x="560" y="138" fill="#cfbf98" font-size="12">护甲 armor</text>
+  <text x="560" y="164" fill="#cfbf98" font-size="12">背包 inventory</text>
+  <text x="560" y="190" fill="#cfbf98" font-size="12">buff / 流血 / 饥饿</text>
+</svg>
+
+<h2>四、单帧更新管线（tick order）</h2>
+<p>顺序很关键：先收输入、再算 AI、再动、再结算战斗、最后渲染。渲染永远最后，保证一致性与可回放。</p>
+
+<svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
+  <g font-size="12" text-anchor="middle">
+    <rect x="10" y="30" width="90" height="36" rx="8" fill="#241c12" stroke="#6b5836"/><text x="55" y="53" fill="#ffd97a">输入</text>
+    <rect x="120" y="30" width="90" height="36" rx="8" fill="#241c12" stroke="#6b5836"/><text x="165" y="53" fill="#ffd97a">AI</text>
+    <rect x="230" y="30" width="90" height="36" rx="8" fill="#241c12" stroke="#6b5836"/><text x="275" y="53" fill="#ffd97a">移动</text>
+    <rect x="340" y="30" width="90" height="36" rx="8" fill="#241c12" stroke="#6b5836"/><text x="385" y="53" fill="#ffd97a">战斗</text>
+    <rect x="450" y="30" width="90" height="36" rx="8" fill="#241c12" stroke="#6b5836"/><text x="495" y="53" fill="#ffd97a">生存</text>
+    <rect x="560" y="30" width="90" height="36" rx="8" fill="#241c12" stroke="#6b5836"/><text x="605" y="53" fill="#ffd97a">生成</text>
+    <rect x="670" y="30" width="80" height="36" rx="8" fill="#241c12" stroke="#6b5836"/><text x="710" y="53" fill="#ffd97a">渲染</text>
+  </g>
+  <g stroke="#ffd97a" stroke-width="1.5" marker-end="url(#arrow)">
+    <line x1="100" y1="48" x2="118" y2="48"/>
+    <line x1="210" y1="48" x2="228" y2="48"/>
+    <line x1="320" y1="48" x2="338" y2="48"/>
+    <line x1="430" y1="48" x2="448" y2="48"/>
+    <line x1="540" y1="48" x2="558" y2="48"/>
+    <line x1="650" y1="48" x2="668" y2="48"/>
+  </g>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ffd97a"/></marker></defs>
+</svg>
+
+<h2>五、各维度考量</h2>
+<table>
+  <tr><th>维度</th><th>要点</th><th>落地建议</th></tr>
+  <tr><td>性能</td><td class="info">数十单位 + 子弹/特效，60fps</td><td>网格空间分区做碰撞与查询；对象池复用子弹/掉落；静态地图用离屏 canvas 缓存；渲染只画视口内实体</td></tr>
+  <tr><td>数据驱动</td><td class="ok">配置与逻辑分离</td><td>物品/敌人/技能/价格放进 JSON 表，逻辑读表。改平衡不用动代码，且天然 MOD 友好</td></tr>
+  <tr><td>可测试性</td><td class="ok">无头跑得起来</td><td>沿用你已有的 sandbox：逻辑层不依赖真实 DOM，暴露 <code>window.__ronin</code> 钩子，CI 里跑冒烟 + 边界用例</td></tr>
+  <tr><td>确定性</td><td class="info">复现 bug / 存档</td><td>固定步长 + 可控随机种子；同一帧序列必然同结果，方便 debug-trace 复现偶发移动失败</td></tr>
+  <tr><td>扩展</td><td>难度 & 内容</td><td>离枢纽镇越远敌人越凶；内容靠数据表增量扩展，不碰核心循环</td></tr>
+  <tr><td>状态机</td><td>角色/敌人行为</td><td>明确状态：idle → move → attack → down → dead；倒地可救援，头部归零直接昏迷，避免歧义</td></tr>
+  <tr><td>风格约定</td><td class="warn">中文用户</td><td>涨=红、跌=绿；货币用 ¥；UI 默认中文</td></tr>
+  <tr><td>风险</td><td class="warn">范围蔓延</td><td>先保核心循环（移动/战斗/生存）跑通，再叠经济/建造；每加一个系统写一个最小用例</td></tr>
+</table>
+
+<h2>六、和你现有代码的对应关系</h2>
+<p>你现在的 <code>js/game.js</code> 已经把上面 9 个模块揉在一个文件里了。推荐的重构顺序：</p>
+<ul style="color:#cfbf98;font-size:14px;line-height:2">
+  <li>① 抽出 <code>World</code>（地图/网格/生成）+ <code>Actor</code>（身体部位/技能）作为纯数据+纯函数</li>
+  <li>② 抽出 <code>Combat</code> 与 <code>AI</code>，让 tick 调用它们而不是内联</li>
+  <li>③ UI 全部改为"读状态后渲染"，不再在事件里直接改逻辑</li>
+  <li>④ 把物品/敌人定义搬进 <code>data/</code> 配置</li>
+  <li>⑤ 保留并扩展 <code>test-smoke.js</code> / <code>debug-trace.js</code> 作为回归测试</li>
+</ul>
+
+<div class="foot">
+  结论：仿 Kenshi 的关键不是画面，而是"部位伤害 + 技能成长 + 开放沙盒"这三个系统互相咬合。先把它拆成 引擎 / 世界 / 角色 / 战斗 / AI / 生存 / 经济 / UI / 存档 九个模块，逻辑与表现分离，再用你已有的无头测试守住核心循环——这套结构能让你无限加内容而不至于重写。
+</div>
+
+</body>
+</html>

@@ -1,0 +1,4099 @@
+{
+ "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
+ "version": 1,
+ "updatedAt": "2026-08-25T00:58:23.235Z",
+ "total": 500,
+ "done": 76,
+ "phases": [
+  {
+   "id": "M0",
+   "name": "项目重构基础：逻辑/表现分离"
+  },
+  {
+   "id": "M1",
+   "name": "核心循环系统化"
+  },
+  {
+   "id": "M2",
+   "name": "生存与部位伤害深化"
+  },
+  {
+   "id": "M3",
+   "name": "数据驱动内容管线"
+  },
+  {
+   "id": "M4",
+   "name": "经济·背包·贸易"
+  },
+  {
+   "id": "M5",
+   "name": "世界与地图扩展"
+  },
+  {
+   "id": "M6",
+   "name": "AI 行为深化"
+  },
+  {
+   "id": "M7",
+   "name": "建造与据点"
+  },
+  {
+   "id": "M8",
+   "name": "UI/UX 与引导"
+  },
+  {
+   "id": "M9",
+   "name": "存档系统"
+  },
+  {
+   "id": "M10",
+   "name": "确定性与性能"
+  },
+  {
+   "id": "M11",
+   "name": "测试与质量体系"
+  },
+  {
+   "id": "M12",
+   "name": "3D 渲染骨架（Three.js）"
+  },
+  {
+   "id": "M13",
+   "name": "3D 交互与相机"
+  },
+  {
+   "id": "M14",
+   "name": "3D 表现与反馈"
+  },
+  {
+   "id": "M15",
+   "name": "3D 资源管线（glTF）"
+  },
+  {
+   "id": "M16",
+   "name": "多人在线架构"
+  },
+  {
+   "id": "M17",
+   "name": "网络同步技术"
+  },
+  {
+   "id": "M18",
+   "name": "多人玩法设计"
+  },
+  {
+   "id": "M19",
+   "name": "服务器工程与部署"
+  },
+  {
+   "id": "M20",
+   "name": "音频与手感打磨"
+  },
+  {
+   "id": "M21",
+   "name": "发布工程 v1.0"
+  }
+ ],
+ "tasks": [
+  {
+   "id": "T001",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "建立 src/ 目录骨架（core/world/entities/systems/ui/input/data/save 全部占位模块与导出）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:02:10.146Z"
+  },
+  {
+   "id": "T002",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "添加 package.json（type:module）与 npm scripts（dev/test/build）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:02:10.146Z"
+  },
+  {
+   "id": "T003",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "core/Engine.js：固定步长主循环（60Hz 累积器 + 最大补偿帧）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:02:10.146Z"
+  },
+  {
+   "id": "T004",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "Engine 无头模式：不依赖 DOM，可注入指定帧数运行",
+   "status": "done",
+   "doneAt": "2026-08-24T23:02:10.146Z"
+  },
+  {
+   "id": "T005",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "core/RNG.js：种子随机 mulberry32，支持保存/恢复状态",
+   "status": "done",
+   "doneAt": "2026-08-24T23:02:10.146Z"
+  },
+  {
+   "id": "T006",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "审计并替换全部 Math.random 调用点为 RNG（输出调用点清单）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:07:37.423Z"
+  },
+  {
+   "id": "T007",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "core/EventBus.js：on/off/emit/once 解耦事件",
+   "status": "done",
+   "doneAt": "2026-08-24T23:02:10.146Z"
+  },
+  {
+   "id": "T008",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "world/World.js：实体容器（add/remove/getById/id 自增）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:07:37.423Z"
+  },
+  {
+   "id": "T009",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "World 空间哈希网格（cell=100）：插入/查询/跨格移动更新",
+   "status": "done",
+   "doneAt": "2026-08-24T23:07:37.423Z"
+  },
+  {
+   "id": "T010",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "entities/Actor.js：从 game.js 抽出角色工厂（纯数据+行为方法集）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:12:07.897Z"
+  },
+  {
+   "id": "T011",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "entities/Body.js：六部位模型独立（含 cut/robo 截断义肢字段）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:12:07.897Z"
+  },
+  {
+   "id": "T012",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "entities/Skills.js：成长曲线参数化（xpNeed = level*系数）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:12:07.897Z"
+  },
+  {
+   "id": "T013",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "entities/Inventory.js：背包结构与增删改查+堆叠",
+   "status": "done",
+   "doneAt": "2026-08-24T23:12:07.897Z"
+  },
+  {
+   "id": "T014",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "world/Time.js：昼夜/天数抽离（DAY_LEN 入配置）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:16:32.530Z"
+  },
+  {
+   "id": "T015",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "input/Camera.js：跟随/平移/缩放/clamp 抽离",
+   "status": "done",
+   "doneAt": "2026-08-24T23:16:32.530Z"
+  },
+  {
+   "id": "T016",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "input/Input.js：鼠标键盘事件→意图队列抽离",
+   "status": "done",
+   "doneAt": "2026-08-24T23:16:32.530Z"
+  },
+  {
+   "id": "T017",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "ui/HUD.js 改为纯读状态渲染（禁止直改游戏变量）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:25:23.618Z"
+  },
+  {
+   "id": "T018",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "src/main.js 装配根：初始化顺序与依赖注入",
+   "status": "done",
+   "doneAt": "2026-08-24T23:25:23.618Z"
+  },
+  {
+   "id": "T019",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "兼容层：旧 game.js 变薄壳，仅负责加载 main.js",
+   "status": "done",
+   "doneAt": "2026-08-24T23:25:23.618Z"
+  },
+  {
+   "id": "T020",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "migration：战斗逻辑迁入 systems/Combat.js（tryHit 纯函数化）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:31:18.789Z"
+  },
+  {
+   "id": "T021",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "migration：AI 迁入 systems/AI.js（aiThink/updateUnit 拆分）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:38:34.978Z"
+  },
+  {
+   "id": "T022",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "migration：生存迁入 systems/Survival.js（饥饿/进食/睡眠/绷带/救助）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:46:23.510Z"
+  },
+  {
+   "id": "T023",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "migration：经济迁入 systems/Economy.js（商店数据流/购买结算）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:54:36.344Z"
+  },
+  {
+   "id": "T024",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "migration：建造迁入 systems/Build.js（structures/合法性/放置）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:54:36.344Z"
+  },
+  {
+   "id": "T025",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "migration：刷怪迁入 world/Spawner.js（tier/距离规则表驱动）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:54:36.344Z"
+  },
+  {
+   "id": "T026",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "DOM 访问清理：逻辑层零 document 引用（grep 审计脚本）",
+   "status": "done",
+   "doneAt": "2026-08-24T23:58:57.194Z"
+  },
+  {
+   "id": "T027",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "test/smoke.js 改造为 import main 的无头运行方式",
+   "status": "done",
+   "doneAt": "2026-08-24T23:58:57.194Z"
+  },
+  {
+   "id": "T028",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "重构基线：冒烟全绿并记录运行耗时",
+   "status": "done",
+   "doneAt": "2026-08-24T23:58:57.194Z"
+  },
+  {
+   "id": "T029",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "debug-trace.js 适配新模块路径",
+   "status": "done",
+   "doneAt": "2026-08-24T23:58:57.194Z"
+  },
+  {
+   "id": "T030",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "添加轻量 ESLint 配置与 lint 脚本（可选启用）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:14:33.028Z"
+  },
+  {
+   "id": "T031",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "撰写 README 开发指南（目录说明/如何加系统/如何跑测试）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:14:33.028Z"
+  },
+  {
+   "id": "T032",
+   "phase": "M0",
+   "phaseName": "项目重构基础：逻辑/表现分离",
+   "title": "M0 门禁：手动试玩 10 分钟按回归清单核对无行为变化",
+   "status": "done",
+   "doneAt": "2026-08-25T00:14:33.028Z"
+  },
+  {
+   "id": "T033",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "移动指令管线：Input 意图→World 查询→Actor 状态机统一",
+   "status": "done",
+   "doneAt": "2026-08-25T00:26:04.283Z"
+  },
+  {
+   "id": "T034",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "攻击管线：目标选择/射程/冷却收敛到 Combat.step()",
+   "status": "done",
+   "doneAt": "2026-08-25T00:26:04.283Z"
+  },
+  {
+   "id": "T035",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "命中率公式入 data/balance.js（MELEE_HIT_BASE 等常量）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:26:04.283Z"
+  },
+  {
+   "id": "T036",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "部位加权表 PART_WEIGHTS 入 balance.js",
+   "status": "done",
+   "doneAt": "2026-08-25T00:26:04.283Z"
+  },
+  {
+   "id": "T037",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "伤害公式参数化（力量系数/护甲减法/随机区间）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:42:10.643Z"
+  },
+  {
+   "id": "T038",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "倒地阈值/流血速率/自然自愈速率全部入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:42:10.643Z"
+  },
+  {
+   "id": "T039",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "敌对矩阵 hostile() 改为 FACTION_RULES 数据表驱动",
+   "status": "done",
+   "doneAt": "2026-08-25T00:32:38.902Z"
+  },
+  {
+   "id": "T040",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "自动反击开关经 EventBus 广播（去全局变量耦合）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:42:10.643Z"
+  },
+  {
+   "id": "T041",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "框选算法抽纯函数 rectSelect(units, rect)",
+   "status": "done",
+   "doneAt": "2026-08-25T00:33:25.449Z"
+  },
+  {
+   "id": "T042",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "编队偏移 FORMATION 入配置",
+   "status": "done",
+   "doneAt": "2026-08-25T00:33:25.449Z"
+  },
+  {
+   "id": "T043",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "相机跟随 G 切换走 EventBus（CAMERA_FOLLOW 事件）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:33:25.449Z"
+  },
+  {
+   "id": "T044",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "昼夜亮度函数纯化；夜色/黄昏 RGBA 入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:42:10.643Z"
+  },
+  {
+   "id": "T045",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "尸体/战利品生命周期时常量入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:42:10.643Z"
+  },
+  {
+   "id": "T046",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "粒子系统上限与各类生成率入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:42:10.643Z"
+  },
+  {
+   "id": "T047",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "血迹 decal 上限入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:42:10.643Z"
+  },
+  {
+   "id": "T048",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "HUD 刷新节拍常量化（HUD_INTERVAL_MS）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:42:10.643Z"
+  },
+  {
+   "id": "T049",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "单测：命中率公式在闪避差 ±∞ 时收敛到上下限",
+   "status": "done",
+   "doneAt": "2026-08-25T00:47:58.409Z"
+  },
+  {
+   "id": "T050",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "单测：部位加权表权重和为 1",
+   "status": "done",
+   "doneAt": "2026-08-25T00:47:58.409Z"
+  },
+  {
+   "id": "T051",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "单测：倒地→流血→死亡完整时序符合配置数值",
+   "status": "done",
+   "doneAt": "2026-08-25T00:47:58.409Z"
+  },
+  {
+   "id": "T052",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "单测：敌对矩阵全 faction 组合真值表快照",
+   "status": "done",
+   "doneAt": "2026-08-25T00:47:58.409Z"
+  },
+  {
+   "id": "T053",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "回归：左键走路冒烟持续 PASS",
+   "status": "done",
+   "doneAt": "2026-08-25T00:47:58.409Z"
+  },
+  {
+   "id": "T054",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "回归：睡眠推进天数持续 PASS",
+   "status": "done",
+   "doneAt": "2026-08-25T00:47:58.409Z"
+  },
+  {
+   "id": "T055",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "回归：建造放置持续 PASS",
+   "status": "done",
+   "doneAt": "2026-08-25T00:47:58.409Z"
+  },
+  {
+   "id": "T056",
+   "phase": "M1",
+   "phaseName": "核心循环系统化",
+   "title": "M1 门禁：核心循环 100% 由 src 模块驱动（旧代码仅剩启动壳）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:47:58.409Z"
+  },
+  {
+   "id": "T057",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "Body 截断规则迁移：四肢 HP≤-50% 标记 cut（一次性）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T058",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "义肢 robo 状态迁移：该部位血量下限 35% 不再恶化",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T059",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "Body 暴露视觉标记接口（供渲染层画断肢/金属件）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T060",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "规则确认+单测：流血只作用于胸腔",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T061",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "头部归零→昏迷与 wakeGrace 无敌窗参数化",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T062",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "救助 R：通道时长/距离入 balance（RESCUE_TIME 等）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T063",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "绷带 C：治疗量/消耗品数量入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T064",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "饥饿：衰减速率/进食恢复量入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T065",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "单测：饥饿归零开始扣胸腔血的速率正确",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T066",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "Survival 睡眠：实现 Time.skipToMorning 时间跳跃",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T067",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "睡眠恢复公式入 balance（各部位回复比例）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T068",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "睡眠有效半径 CAMP_SLEEP_RADIUS 入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T069",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "营火脱战回复 ×3 倍率入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T070",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "通道互斥：救助/包扎/俘虏同时只能进行一个（单测）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T071",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "单测：倒地单位不可被选为攻击目标",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T072",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "wakeGrace 苏醒保护窗参数化并入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T073",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "断肢影响表：移速/攻速惩罚系数入 balance",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T074",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "义肢力量+2 通过 Skills 修正器实现（非直接改值）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T075",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "HUD 身体图数据接口：Body.snapshot() 输出六部位比率与状态",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T076",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "部位状态文案生成器（完好/轻伤/重伤/残废/机械）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T077",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "义肢商店安装逻辑迁移 Economy（自动寻找缺失部位）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T078",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "渲染契约文档：limbState 如何映射金属色（写入 docs）",
+   "status": "done",
+   "doneAt": "2026-08-25T00:58:23.235Z"
+  },
+  {
+   "id": "T079",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "手测清单：截断→买义肢→再战斗 全流程回归",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T080",
+   "phase": "M2",
+   "phaseName": "生存与部位伤害深化",
+   "title": "M2 门禁：Kenshi 式“断肢-义肢-续命”体验闭环确认",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T081",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "data/items.js Schema 设计（id/name/type/price/stack/effect）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T082",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "现有消耗品入表：干粮/绷带/营地套装/建材",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T083",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "全部武器入表：fists/stick/iron/spear/mace/katana",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T084",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "护甲入表：leather/chain（含 def 减伤值）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T085",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "机械义肢入表（roboLimb）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T086",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "data/enemies.js Schema（hp/技能/武器/掉落/aggro/速度）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T087",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "迁移四种人类敌人：饥饿强盗/强盗/荒原剑客/强盗头目",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T088",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "狼群 beast 定义（速度/撕咬/低血逃跑阈值）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T089",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "城镇卫兵 guard 定义（巡逻/装备/leash 半径）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T090",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "data/skills.js：四技能成长参数与上限",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T091",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "创建 data/balance.js 并完成首批 30 项魔法数字审计搬迁",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T092",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "商店货单由 towns 配置驱动（每镇不同商品）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T093",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "掉落表 lootTable 机制（猫币区间/食物概率/稀有物）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T094",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "物品图标映射表（emoji 皮肤层，便于日后换美术）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T095",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "MOD 支持：允许 JSON 覆盖包加载 loadDataOverrides()",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T096",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "数据校验器 validateData：必填字段/数值范围/引用完整性",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T097",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "单测：items 表通过 validateData 校验",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T098",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "单测：enemies 强度随出生距离单调不减",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T099",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "平衡文档：开局资源（kits1/mats2/cats120）合理性说明",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T100",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "工具：自动导出全价格表 outputs/prices.md",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T101",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "工具：敌人强度-距离曲线图 outputs/curve.md",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T102",
+   "phase": "M3",
+   "phaseName": "数据驱动内容管线",
+   "title": "M3 门禁：新增一件商品只需改数据文件、零代码改动",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T103",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "Inventory 装备槽位实现（weapon/armor/义肢位独立）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T104",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "背包容量与超重规则（简化重量模型）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T105",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "拾取改为进入最近队员背包（替代全局资源池）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T106",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "设计文档：全局资源 vs 个人背包双轨制边界",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T107",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "商店买卖全部改走 Inventory API",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T108",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "卖出通道：战利品类物品可半价售出",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T109",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "供需浮动价格雏形：销量计数影响 ±15%",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T110",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "招募费用递增公式：随队伍规模上涨",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T111",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "奴隶搬运目的地升级：最近的储物箱/营地",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T112",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "新建建筑：储物箱（承接背包溢出与搬运存放）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T113",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "掉落物合并：同类相邻自动堆叠",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T114",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "钱袋可视化分级（小额/中额/大额外观差异）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T115",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "单测：买入卖出金额守恒（含折扣路径）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T116",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "单测：背包堆叠到达上限后开新格",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T117",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "单测：供需浮动的上下界钳制",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T118",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "经济模拟脚本 outputs/econ-sim.js：击杀收支曲线",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T119",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "商店 UI 显示单价与折扣来源（声望/供需标注）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T120",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "交易日志：最近 5 笔买卖入 HUD 信息流",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T121",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "单测：奴隶搬运的目标选择策略",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T122",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "UI：义肢安装不可逆操作的二次确认",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T123",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "平衡复核：义肢定价（依据 econ-sim 输出调整）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T124",
+   "phase": "M4",
+   "phaseName": "经济·背包·贸易",
+   "title": "M4 门禁：打怪→拾取→搬运→卖钱→购物 全闭环验收",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T125",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "世界扩容至 8000×8000（为分块加载做准备）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T126",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "地形三层分离：底色层/装饰层/碰撞层",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T127",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "生物群系概念：sand/grass/rock 按区域噪声分布",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T128",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "群系调色板：各地表区域色板差异",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T129",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "噪声斑块地形生成（替换现有平铺 pattern）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T130",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "道路网络：连接两镇的路径（纯视觉引导）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T131",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "废墟点位：E 键搜索杂物堆获得随机资源（带冷却）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T132",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "新地点：荒原游商营地（中立流动商人）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T133",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "新地点：废墟塔楼（高风险高回报掉落区）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T134",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "危险纵深区：地图边缘红雾渐染警示",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T135",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "枢纽镇扩建：围墙缺口大门造型",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T136",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "第二城镇差异化：世界之角转型军火商货单",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T137",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "城镇 NPC：情报贩子（付费告知最近匪巢方位）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T138",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "拾荒系统交互打磨（进度条/结果飘字）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T139",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "商队事件：定时沿道路移动，可选择护卫或劫掠",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T140",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "狼巢点位：周期刷新狼群，清剿获得声望奖励",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T141",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "区域难度梯度由 enemies 表重新编排",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T142",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "地标系统：首访触发“你发现了XX”日志",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T143",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "小地图按群系着色渲染",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T144",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "M 键大地图：全屏展示已发现地标",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T145",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "新档出生点三选一（近镇/远镇/流浪者起点）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T146",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "世界常数集中 WORLD 配置（尺寸/城距/群系种子）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T147",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "空间哈希适配大地图（动态 cell 尺寸）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T148",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "视口裁剪审计：装饰/实体/粒子三层全覆盖",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T149",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "静态地形离屏缓存：512 分块按需生成",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T150",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "性能目标：首次世界生成 <300ms",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T151",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "单测：群系函数纯度（同种子同输出）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T152",
+   "phase": "M5",
+   "phaseName": "世界与地图扩展",
+   "title": "M5 门禁：完成一条 10 分钟步行探索路线并截图存 outputs/",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T153",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "AI 有限状态机正式化：states 枚举 + 转移表驱动",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T154",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "AI 调试日志开关 DEBUG_AI（状态迁移追踪）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T155",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "统一视野判定 canSee：距离 + 夜间视野缩减系数",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T156",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "追击放弃距离参数化（超远返回巡逻）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T157",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "小队协防：队友遇袭时半径内友军自动支援",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T158",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "狼群包抄：≥2 只时侧翼偏移包围目标点",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T159",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "诱饵机制：投掷肉块吸引野兽优先级提升",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T160",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "A* 寻路模块（网格实现，建筑/围墙为障碍）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T161",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "寻路请求节流：每单位 0.5s 内不重复计算",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T162",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "路径平滑：视线捷径裁剪（string pulling 简化版）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T163",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "动态避障（局部推挤）与 A* 的结合策略文档",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T164",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "奴隶 AI 完善：跟随/搬运/逃跑三态细化",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T165",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "俘虏驻守：可指派奴隶留守营地篝火",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T166",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "卫兵支援：城镇遇袭时的支援呼叫半径机制",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T167",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "阵营关系矩阵数据化（支持 MOD 修改敌我）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T168",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "声望联动：高声望城镇卫兵主动协助玩家作战",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T169",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "头目 AI：战吼技能（自我加速/震慑弱敌）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T170",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "野兽食尸：靠近尸体进食回血（玩家可趁机偷袭）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T171",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "夜间视野缩减使潜行接近成为可行战术",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T172",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "AI 思考分帧 stagger 参数化（性能保护）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T173",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "单测：FSM 每个状态的进入/退出条件覆盖",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T174",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "单测：A* 绕墙用例（构造小型迷宫）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T175",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "单测：诱饵存在时野兽优先攻击诱饵",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T176",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "单测：协防触发半径与响应时间",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T177",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "调参笔记：追击/逃跑阈值手感记录 outputs/ai-notes.md",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T178",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "AI 可视化调试：叠加显示状态文字与目标连线",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T179",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "敌人台词表：遭遇/逃跑/死亡喊话文本",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T180",
+   "phase": "M6",
+   "phaseName": "AI 行为深化",
+   "title": "M6 门禁：连续观察 30 场遭遇战无明显呆滞或卡死",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T181",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "Build 注册表：wall/fire/bed/storage/door 类型定义",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T182",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "建造网格吸附与 R 键旋转围墙段",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T183",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "建筑成本/耐久数值表",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T184",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "围墙自动拼接：相邻段视觉连续渲染",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T185",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "可建造的门：友军通行、敌军需破坏",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T186",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "建筑耐久与破坏：阻挡敌人路径时会遭攻击",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T187",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "床：睡觉恢复效率 +20%（相对露天篝火）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T188",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "储物箱与 M4 搬运系统对接",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T189",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "训练假人：挂机练习近战（慢速成长+耐久损耗）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T190",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "拆除返还 50% 建材",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T191",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "权限规则：仅玩家阵营可放置/拆除",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T192",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "受损建筑显示血条",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T193",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "敌人攻城行为：路径被挡时攻击阻挡建筑",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T194",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "建造模式 UI 升级：类型轮盘/剩余材料/旋转提示",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T195",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "据点认定：篝火+床+箱+墙≥8 段 → 升级为据点（全增益）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T196",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "据点命名：旗帜自定义名字输入",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T197",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "据点威胁机制：附近匪徒周期性发起袭击事件",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T198",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "袭击波次表：间隔与强度随据点价值成长",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T199",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "单测：放置合法性（重叠/城镇禁区/材料不足）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T200",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "单测：耐久归零移除并返还材料",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T201",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "单测：门的友军通行与敌军阻拦",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T202",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "单测：据点认定条件的边界情况",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T203",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "性能：建筑静态部分合批绘制",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T204",
+   "phase": "M7",
+   "phaseName": "建造与据点",
+   "title": "M7 门禁：建成一座扛住一整波袭击的完整据点",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T205",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "HUD 全面模块化：仅订阅 EventBus 数据推送",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T206",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "设置面板：音量/静音/教程开关/FPS 显隐",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T207",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "按键重绑定界面（配置存 localStorage）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T208",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "教程系统正式化：分步引导+可跳过（替代 hint 队列）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T209",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "多选队员时左侧面板快速切换（成员列表点击）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T210",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "血条分级样式：残废部位显示灰色叉号",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T211",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "战斗飘字聚合：同一目标短窗口内合并数字",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T212",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "日志分类过滤：战斗/经济/系统三个筛选按钮",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T213",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "小地图点击直接跳转相机位置",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T214",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "死亡小结页：存活天数/击杀数/行走距离统计",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T215",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "成就雏形：首个头目/首座据点/首次断肢求生…",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T216",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "加载画面：进度条 + 荒原语录轮播",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T217",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "主菜单：继续/新的旅程/设置/关于",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T218",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "手柄支持调研报告（只调研不实现，输出结论）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T219",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "触屏最小可用实验分支：点选/长按移动",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T220",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "无障碍：色盲友好血条配色可选项",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T221",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "本地化框架：文案外置 zh-CN.json（预留 en）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T222",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "字体渲染统一管理器（消除每帧 setFont 开销）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T223",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "UI 动效规范：面板淡入/受击红晕统一曲线",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T224",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "屏幕震动强度设置项（弱/标准/关）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T225",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "帧率限制选项（30/60/不锁）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T226",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "单测：教程步骤机的状态流转完整性",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T227",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "可用性走查：新手 5 分钟引导任务自查表执行",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T228",
+   "phase": "M8",
+   "phaseName": "UI/UX 与引导",
+   "title": "M8 门禁：UI 走查问题清单清零",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T229",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "Save.js 序列化 Schema 设计（带版本号 version 字段）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T230",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "序列化覆盖清单：单位/背包/建筑/世界/事件状态",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T231",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "RNG 状态与 Time 状态一并入库（保证续档一致性）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T232",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "localStorage 键名管理与容量预算（<4MB 目标）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T233",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "版本迁移策略：vN→vN+1 迁移函数注册表",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T234",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "主菜单“继续”按钮：读取最近存档",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T235",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "三存档槽位 UI 与管理（删除/覆盖确认）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T236",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "自动存档：每次天亮 + 重大事件触发",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T237",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "死亡处理策略：回档到当日天亮自动存档点",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T238",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "存档导出/导入：JSON 文件下载与上传",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T239",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "单测：序列化→反序列化深度相等往返",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T240",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "单测：损坏 JSON 的优雅降级与备份提示",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T241",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "压力测试：满配据点 + 50 单位的存档体积",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T242",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "单机自洽说明：存档防篡改不在范围（联机另议）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T243",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "云同步占位接口（本期不实现，仅预留签名）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T244",
+   "phase": "M9",
+   "phaseName": "存档系统",
+   "title": "M9 门禁：关闭页面→继续游戏，世界状态无损还原",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T245",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "固定步长引擎全面接管：渲染使用插值 alpha",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T246",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "确定性审计：禁用一切非种子随机源、稳定遍历顺序",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T247",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "输入录制回放工具（record/replay 同种子复现）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T248",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "用回放归档历史偶发 bug（outputs/repro/ 目录）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T249",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "性能基线：update/render 分别打点计时报告",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T250",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "渲染批处理审查：减少 save/restore 与状态切换",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T251",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "fillText 文本度量缓存（避免每帧 measure）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T252",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "粒子对象池实现",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T253",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "浮动文字对象池实现",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T254",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "空间哈希查询替换 O(n²) 的分离/索敌逻辑",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T255",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "大规模压测：200 单位混战场景帧率报告",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T256",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "内存泄漏排查：Heap Snapshot 对比脚本",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T257",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "GC 审计：热路径零临时对象分配检查清单",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T258",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "移动端性能摸底（可选执行）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T259",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "自适应画质：粒子密度/特效按帧率自动降级",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T260",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "单测：同种子+同输入序列 → 世界状态哈希一致",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T261",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "性能报告模板固化 outputs/perf.md",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T262",
+   "phase": "M10",
+   "phaseName": "确定性与性能",
+   "title": "M10 门禁：目标机 150 单位混战稳定 60FPS",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T263",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "引入 Vitest（或轻量自研 runner），建立 test/unit 目录",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T264",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "Combat 单元套件 ≥12 用例（命中/伤害/截断/俘虏）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T265",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "AI 状态机套件 ≥10 用例（每状态进出）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T266",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "Survival 套件 ≥8 用例（饥饿/睡/绷带/救助）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T267",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "Economy 套件 ≥8 用例（折扣/供需/守恒）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T268",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "Body 套件 ≥10 用例（部位/截断/义肢/苏醒）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T269",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "Inventory 套件 ≥8 用例（堆叠/槽位/容量）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T270",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "Save 往返套件 ≥6 用例",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T271",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "World 空间哈希套件 ≥6 用例（插入/查询/跨格）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T272",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "RNG 确定性套件 ≥4 用例（同种子同序列）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T273",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "npm test 一键运行全部 + 文本覆盖率报告",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T274",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "冒烟测试纳入 npm test（子进程执行 test-smoke.js）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T275",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "失败现场快照输出到 outputs/test-fail/",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T276",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "测试命名与目录规范文档",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T277",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "CI 占位：.github/workflows/test.yaml 骨架",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T278",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "提交前检查清单 checklist.md",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T279",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "bug 复现归档规范：tests/repro/README 说明格式",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T280",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "历史 bug 回归用例：把 v0.1~v0.4 已知 bug 各写成用例（≥6 条）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T281",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "渲染适配器 mock（让逻辑测试与渲染后端无关）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T282",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "覆盖率目标声明：core/systems 行覆盖 ≥70%",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T283",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "稳定性脚本：连续 20 次冒烟零失败才算绿",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T284",
+   "phase": "M11",
+   "phaseName": "测试与质量体系",
+   "title": "M11 门禁：任何提交前 npm test 必须全绿",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T285",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "锁定 Three.js 版本并通过 importmap/本地 ESM 引入",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T286",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "定义 IRenderer 渲染后端契约（Canvas2D/Three 可切换）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T287",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "Scene/WebGLRenderer 初始化与窗口 resize 处理",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T288",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "斜俯视相机 Rig：俯角 55°、yaw 可旋转、滚轮调距离",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T289",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "地面：200×200 分段 PlaneGeometry + 沙色材质",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T290",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "光照：HemisphereLight + DirectionalLight（阴影暂关）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T291",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "EntityView 基类：从逻辑状态单向同步到 Mesh",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T292",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "人形占位：胶囊躯干+球头+四肢 Box（六部位可独立定位）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T293",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "狼占位：拉长盒体+四足示意",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T294",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "建筑占位：墙=Box 排列，篝火=圆锥+PointLight",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T295",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "城镇占位：地面圆盘+房屋盒子群",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T296",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "材质规范：主体 MeshLambertMaterial（性能优先）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T297",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "朝向同步：mesh.rotation.y 与逻辑 face 角度映射",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T298",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "行走动画占位：身体 bob + 四肢正弦摆动",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T299",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "攻击动画占位：持械臂前伸 + 武器盒挥动",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T300",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "倒地姿态占位：整体倒伏 90 度过渡",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T301",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "尸体淡出：透明度渐隐或缓慢下沉",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T302",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "选择指示：脚下绿色圆环 Mesh 跟随选中单位",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T303",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "血条 Sprite：始终面向相机的世界空间 UI",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T304",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "名字标签 Sprite 实现",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T305",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "InstancedMesh 验证：100+ 胶囊单位 60FPS 基准记录",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T306",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "视锥裁剪确认：统计 draw calls 数量达标",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T307",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "渲染循环与 Engine 解耦：render(interpolateAlpha)",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T308",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "DPR 适配与抗锯齿参数配置",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T309",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "WebGL 不可用时自动降级回 Canvas2D 后端",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T310",
+   "phase": "M12",
+   "phaseName": "3D 渲染骨架（Three.js）",
+   "title": "M12 门禁：现有全部玩法在 3D 占位渲染下完整可玩",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T311",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "Raycaster 拾取地面点：实现右键移动指令",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T312",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "Raycaster 拾取单位：左右键语义与 2D 版一致",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T313",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "框选：屏幕矩形→地面投影→单位筛选（沿用 rectSelect）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T314",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "相机 WASD 平移（按当前 yaw 方向向量计算）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T315",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "右键拖拽旋转 yaw：与指令右键用位移阈值区分",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T316",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "滚轮缩放：距离钳制在 min/max 区间",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T317",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "G 键跟随：镜头锚定小队质心（沿用 2D 逻辑）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T318",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "边缘滚动开关（默认关，设置可开）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T319",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "悬停高亮：单位 emissive 微亮或轮廓",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T320",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "悬停 tooltip：复用 DOM 提示框",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T321",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "点击反馈：地面脉冲环（着色器或网格动画）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T322",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "攻击指令反馈：目标头顶红色标记圈",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T323",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "拾取性能：先用空间哈希粗筛再做射线检测",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T324",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "输入意图统一：3D 输入仍写入 Input.js 单一事实源",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T325",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "双端回归清单：同一操作在 2D/3D 后端行为一致",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T326",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "相机防穿地：高度下限与世界边界钳制",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T327",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "键位对照表文档：2D/3D 完全一致声明",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T328",
+   "phase": "M13",
+   "phaseName": "3D 交互与相机",
+   "title": "M13 门禁：在 3D 下完成 选人→走路→攻击→扎营→睡觉 全流程",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T329",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "六部位网格分组：每组独立材质支持单独染色",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T330",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "部位血量→颜色 lerp（绿→黄→红→黑）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T331",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "断肢表现：隐藏对应肢体 Mesh + 断口截面圆盘",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T332",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "义肢表现：金属材质 + 轻微 emissive 发光",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T333",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "护甲可视化：胸部附加装甲 Box 覆层",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T334",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "武器挂点：右手空物体锚点 + 武器 Mesh 挂载",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T335",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "装备更换即时反映到模型",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T336",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "受击反馈：材质 emissive 白色脉冲闪烁",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T337",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "流血粒子：红色 Point Sprites 对象池",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T338",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "打击火花粒子效果",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T339",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "篝火火焰：多层 Billboard 火苗 + 上升烟雾",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T340",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "篝火点光源：夜间 radius 衰减照明",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T341",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "昼夜光照联动：brightness 驱动平行光强度与色温",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T342",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "天空渐变穹顶（晨/昼/昏/夜四段插值）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T343",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "阴影初版：仅平行光低分辨率 ShadowMap（可开关）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T344",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "尸体持久化：躺姿保留 + 地面血渍 Decal 平面",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T345",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "建筑受击晃动与摧毁碎裂效果",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T346",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "选中描边：简化方案为底部光环强度变化",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T347",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "头目特殊化：整体 scale 放大 + 肩部装饰盒",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T348",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "LOD：远距单位切换低模或 Billboard 点",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T349",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "粒子上限与 LOD 距离联动衰减",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T350",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "材质共享审计：控制 draw call 在预算内",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T351",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "3D 空间音效占位：音量随距离衰减",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T352",
+   "phase": "M14",
+   "phaseName": "3D 表现与反馈",
+   "title": "M14 门禁：3D 画面达到“可以拿给别人看”的水准",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T353",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "GLTFLoader 接入（含 DRACO 压缩可选支持）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T354",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "模型规范文档：1 unit=1m、原点在脚底、Y-up、部位命名表",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T355",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "人形模型 A 获取或生成（风格：荒原破布流浪者）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T356",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "骨骼蒙皮分区映射到六部位血量组",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T357",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "动画 clip 接入与混合：walk/run/attack/down",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T358",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "武器 glTF：刀/枪/锤/太刀四件与挂点适配",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T359",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "护甲 glTF：皮甲/锁子甲穿脱切换",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T360",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "狼模型：四足骨骼 + 奔跑/撕咬/逃跑 clip",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T361",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "建筑 glTF 包：墙/门/篝火/帐篷/床/储物箱/假人",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T362",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "城镇建筑包：房屋/水井/摊位/围栅",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T363",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "地形贴图：沙地/岩地/草地三套 tiling 材质",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T364",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "装饰物包：岩石/枯树/骸骨/草丛（转 Instanced）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T365",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "材质色板统一：荒原色调约束文档（避免花哨）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T366",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "LOD 产出规则：high/mid/low 三档切换距离表",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T367",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "资源总体积预算：<25MB（含全部 glTF/贴图）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T368",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "加载缓存与失败兜底：加载失败自动退回占位几何",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T369",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "资源版权核查表：CC0 或自制来源逐条登记",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T370",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "AI 3D 生成工作流记录：提示词→模型→减面→入库",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T371",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "资源加载单元测试：全部引用可载入且命名合规",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T372",
+   "phase": "M15",
+   "phaseName": "3D 资源管线（glTF）",
+   "title": "M15 门禁：占位几何 100% 替换为成品模型",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T373",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "联网目标书：协作为主、PVP 可选开关的设计定稿",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T374",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "架构选型：权威服务器（Node.js）+ WebSocket 通信",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T375",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "验证逻辑层 src/ 可在 Node 无浏览器环境运行",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T376",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "房间模型：roomId/玩家列表/加入离开生命周期",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T377",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "消息协议设计：join/input/state/event 分类",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T378",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "协议版本握手与不匹配拒绝机制",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T379",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "服务器权威 tick：30Hz 模拟循环",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T380",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "客户端预测：本地先行移动 + 服务器校正回滚",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T381",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "快照同步：脏字段增量 + 坐标定点量化",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T382",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "插值缓冲：约 100ms 渲染延迟换取平滑",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T383",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "兴趣管理 AOI：按视口+半径过滤下发实体",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T384",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "实体所有权：玩家只能对自己小队下达指令",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T385",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "战斗权威化：服务器执行 tryHit，客户端只做表现",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T386",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "断线重连：30 秒保留座位 + 快照重建现场",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T387",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "服务器托管：任一玩家掉线世界继续运转",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T388",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "聊天系统：房间频道 + 快捷喊话短语",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T389",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "玩家列表面板：在线状态/Ping 显示",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T390",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "Ping 测量：心跳 RTT 计算与展示",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T391",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "RNG 同步：服务器种子分发，客户端对齐",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T392",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "时间同步：以服务器时间为准 + 客户端偏移估计",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T393",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "反作弊基线：输入合法性/频率限制/越权指令拒绝",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T394",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "模式入口：主菜单增加 单人/联机 选择",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T395",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "本地服务器一键启动：npm run server",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T396",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "公网部署指引文档：端口/防火墙/wss 说明",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T397",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "压力基准：单房间 20 玩家 + 200 NPC 模拟报告",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T398",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "消息帧定界：处理 TCP 粘包/拆包",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T399",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "心跳与超时踢出机制",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T400",
+   "phase": "M16",
+   "phaseName": "多人在线架构",
+   "title": "M16 门禁：两名玩家同房间各自控队协作击杀敌人",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T401",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "状态同步白名单：明确服务器权威的字段清单",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T402",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "单位创建/销毁事件同步（招募/俘虏/死亡）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T403",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "NPC 全服务器权威：客户端仅做表现插值",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T404",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "小队指令消息化：cmd_move/attack/stop 序列化",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T405",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "建造消息化：服务器校验资源扣减与放置合法性",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T406",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "拾取/掉落同步：物品归属竞态采用先到先得",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T407",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "商店交易消息化：并发购买的原子扣款",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T408",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "睡眠时间跳跃多人协调：队长发起全员生效",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T409",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "全局值同步：声望/共享资源定期+变更推送",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T410",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "EventBus ↔ 网络桥接：本地事件自动广播通道",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T411",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "增量快照压缩：坐标 16bit 量化 bitpack",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T412",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "关键帧锚点：每 1s 全量校验防位置漂移",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T413",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "纠错表现：位置偏差超阈值的平滑拉回动画",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T414",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "命中滞后补偿：服务器回溯 100ms 位置判定",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T415",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "AOI 进出表现：远处单位淡入淡出",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T416",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "大厅服务：房间列表/创建/密码（HTTP+WS）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T417",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "多人存档策略：服务器持久化房间世界状态",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T418",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "重连快照分片发送：避免大包阻塞",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T419",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "协议单测：编解码往返与版本兼容矩阵",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T420",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "网络模拟器：延迟/丢包/乱序注入测试",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T421",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "回环集成测试：两个 headless 客户端互联跑冒烟",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T422",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "弱网验收：150ms+3% 丢包下核心玩法可玩",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T423",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "作弊审计用例：伪造伤害/瞬移指令被拒",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T424",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "服务器性能基准：单核可承载房间数测算",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T425",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "运维指标：在线人数/消息吞吐日志",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T426",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "服务端健壮性：异常隔离与房间自动重启",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T427",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "协议文档 outputs/net-protocol.md",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T428",
+   "phase": "M17",
+   "phaseName": "网络同步技术",
+   "title": "M17 门禁：150ms 延迟下双人协作守住一波袭击",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T429",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "多人角色规则：每人独立小队（各自上限 5 人）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T430",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "共享世界规则：怪物与资源竞争、先到先得",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T431",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "同盟系统：结盟小队免友伤开关",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T432",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "共同据点：建筑按玩家归属，同盟可自由通行",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T433",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "面对面交易界面：以物易物拖拽确认",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T434",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "奴隶归属与玩家间转让",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T435",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "声望规则定稿：按镇共享（小队声誉）并实现",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T436",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "世界事件：商队护卫悬赏（多人协作任务）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T437",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "Boss 入侵：头目团定时袭击城镇，全员可参战",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T438",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "房间排行榜：击杀/财富/存活天数",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T439",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "观战模式：死亡后附眼队友或自由视角",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T440",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "PVP 开关：建房时设定（默认关闭）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T441",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "PVP 规则：敌对小队遭遇战与倒地掠夺",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T442",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "掠夺系统：倒地者背包可被取走部分物资",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T443",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "聊天表情与快捷短语轮盘",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T444",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "地图标点共享：Ping 系统全员可见",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T445",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "新人引导：老玩家可发送指令提示卡片",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T446",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "掉线保护：玩家小队 30 秒冻结免受 NPC 攻击",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T447",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "多人平衡：敌人强度随在线人数的动态公式",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T448",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "单测：交易双方物品数量守恒",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T449",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "单测：PVP 掠夺的份额与保底规则",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T450",
+   "phase": "M18",
+   "phaseName": "多人玩法设计",
+   "title": "M18 门禁：三人分工（守家/探索/后勤）完整游玩体验",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T451",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "服务器构建脚本：esbuild 打包 server bundle",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T452",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "配置文件：端口/房间容量/存档目录/环境变量",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T453",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "进程守护：异常退出自动重启并恢复世界",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T454",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "日志体系：分级 rotating 文件",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T455",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "世界持久化：定时落盘 + 关服保存",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T456",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "多房间支持：世界实例池与隔离",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T457",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "管理命令行：踢人/广播/回档操作",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T458",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "健康检查端点 /healthz（HTTP）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T459",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "Dockerfile（提供但非强制）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T460",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "部署文档：VPS 步骤/防火墙/TLS wss 配置",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T461",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "客户端连接配置 UI：IP/端口/记住上次",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T462",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "房间邀请码：base64 直连串生成与解析",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T463",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "版本兼容：客户端与服务端 build 号校验",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T464",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "安全加固：WS 来源校验与消息速率限制",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T465",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "备份脚本：存档目录每日 zip 归档",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T466",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "性能剖析：--prof 采样分析模板与记录",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T467",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "扩容路线文档：纵向扩展→多进程房间路由展望",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T468",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "故障演练清单：杀进程/断网/OOM 模拟处置",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T469",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "运维手册汇总 outputs/ops.md",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T470",
+   "phase": "M19",
+   "phaseName": "服务器工程与部署",
+   "title": "M19 门禁：朋友拿到地址后 10 分钟内成功联机",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T471",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "音频总线：SFX/BGM/Ambience 三通道 + 主音量",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T472",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "存量合成音效迁移到总线并归类整理",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T473",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "战斗音效扩充：格挡/断肢/倒地闷响/狼嚎变体",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T474",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "环境音：风声底噪 + 夜晚虫鸣层次",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T475",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "篝火近距离 loop 音效",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T476",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "UI 音效：点击/开启/错误提示",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T477",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "程序化 BGM 氛围垫（后续可换素材）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T478",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "距离衰减与简易遮挡规则",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T479",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "音乐状态钩子：昼夜与战斗强度切换",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T480",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "设置面板音量滑条实装（联动总线）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T481",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "音频资源体积预算 <8MB",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T482",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "版权核查表：全部音效来源登记",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T483",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "打击停顿 hitstop（40ms）与打击感调优",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T484",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "镜头细节分级：受击微震强弱档",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T485",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "移动手感调参：加速度/转向速率清单执行",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T486",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "文案全面润色：日志/教程/物品描述审校",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T487",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "彩蛋：荒原传说石碑×5（阅读获得背景故事）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T488",
+   "phase": "M20",
+   "phaseName": "音频与手感打磨",
+   "title": "M20 门禁：闭眼仅凭声音能判断正在发生的事件",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T489",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "esbuild 打包单文件 dist/index.html（内联 js/css）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T490",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "打包产物回归：对 dist 版本再跑一遍冒烟",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T491",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "版本号与构建信息注入（关于页可见）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T492",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "CHANGELOG 维护规范与历史整理",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T493",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "发布指引：itch.io/静态托管步骤 outputs/release.md",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T494",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "桌面封装评估：Tauri/Electron 结论文档",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T495",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "图标与页面 meta（og image 占位）",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T496",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "最终平衡审查：全系统数值表通读校对",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T497",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "已知问题清单 KNOWN_ISSUES.md",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T498",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "玩家反馈渠道：GitHub Issues 模板",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T499",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "致谢与授权页：CC0 资源来源列表",
+   "status": "todo",
+   "doneAt": null
+  },
+  {
+   "id": "T500",
+   "phase": "M21",
+   "phaseName": "发布工程 v1.0",
+   "title": "M21 门禁：v1.0 发布候选（RC）封版 🎉",
+   "status": "todo",
+   "doneAt": null
+  }
+ ]
+}

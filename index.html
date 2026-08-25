@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>荒原浪人 · Wasteland Ronin v0.2</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- 顶部资源栏 -->
+<div id="resBar" class="panel">
+  <span>🪙 <b id="resCats">0</b></span>
+  <span>🍖 <b id="resFood">0</b></span>
+  <span>🩹 <b id="resBandage">0</b></span>
+  <span>🏕️ <b id="resKits">0</b></span>
+  <span>🧱 <b id="resMats">0</b></span>
+  <span>📅 第 <b id="resDay">1</b> 天</span>
+  <span id="resClock">☀ 白天</span>
+  <span class="dim small" id="fpsMeter"></span>
+  <span class="dim small">H 帮助 · M 静音</span>
+</div>
+
+<!-- 左侧选中角色面板 -->
+<div id="selPanel" class="panel hidden">
+  <div class="sel-name"><span id="selName">???</span><span id="selTier" class="dim"></span></div>
+  <div class="bar"><div class="bar-label">🫀 胸腔</div><div class="bar-track"><div id="selHp" class="bar-fill hp"></div></div></div>
+  <div class="bar"><div class="bar-label">🧠 头部</div><div class="bar-track"><div id="selHead" class="bar-fill head"></div></div></div>
+  <div class="bar"><div class="bar-label">🍗 饱食</div><div class="bar-track"><div id="selHunger" class="bar-fill hunger"></div></div></div>
+  <div class="skill-grid">
+    <div class="skill"><span>力量</span><b id="skStr">1</b></div>
+    <div class="skill"><span>韧性</span><b id="skTgh">1</b></div>
+    <div class="skill"><span>闪避</span><b id="skDodge">1</b></div>
+    <div class="skill"><span>近战</span><b id="skMelee">1</b></div>
+  </div>
+  <div class="eq-line"><span>武器：<b id="eqWeapon">-</b></span><span>护甲：<b id="eqArmor">无</b></span></div>
+  <canvas id="bodyCanvas" width="96" height="112"></canvas>
+  <div id="selStatus" class="dim small"></div>
+</div>
+
+<!-- 右上小地图 -->
+<canvas id="minimap" width="156" height="156"></canvas>
+
+<!-- 底部小队栏 -->
+<div id="squadBar"></div>
+
+<!-- 底部事件日志 -->
+<ul id="log"></ul>
+
+<!-- 底部提示条（内容由游戏动态更新） -->
+<div id="hint" class="dim"></div>
+
+<!-- 悬停提示 -->
+<div id="tooltip"></div>
+
+<!-- 商店面板 -->
+<div id="shopPanel" class="panel modal hidden">
+  <div class="modal-title">🏕️ <span id="shopTitle">商店</span> <button id="shopClose" class="btn-mini">✕</button></div>
+  <div class="dim small" id="shopInfo"></div>
+  <div id="shopItems"></div>
+</div>
+
+<!-- 帮助 -->
+<div id="helpOverlay" class="overlay hidden">
+  <div class="overlay-box">
+    <h2>📜 操作说明</h2>
+    <p style="margin-bottom:10px;font-size:14px">核心操作：<b style="color:#ffd97a">左键</b> = 选择队员 ｜ <b style="color:#ffd97a">右键</b> = 移动 / 攻击</p>
+    <table class="keys">
+      <tr><td>鼠标左键</td><td>选择队员；点空地 = 走过去；拖拽框选</td></tr>
+      <tr><td>鼠标右键</td><td>移动；点敌人 = 攻击</td></tr>
+      <tr><td>数字 1-5</td><td>快速选择队员</td></tr>
+      <tr><td>Tab</td><td>选择全队</td></tr>
+      <tr><td>空格</td><td>全队原地停下</td></tr>
+      <tr><td>E</td><td>在城镇中打开商店 / 招募</td></tr>
+      <tr><td>F</td><td>进食（消耗干粮）</td></tr>
+      <tr><td>R</td><td>救助倒地的队友</td></tr>
+      <tr><td>C</td><td>使用绷带处理伤口（消耗绷带）</td></tr>
+      <tr><td>V</td><td>就地扎营：消耗营地套装，搭起篝火与帐篷</td></tr>
+      <tr><td>Z</td><td>在营火旁睡觉到天亮（大幅恢复伤势）</td></tr>
+      <tr><td>X</td><td>俘虏倒地的敌人成为奴隶（搬运战利品）；再按 X 释放奴隶</td></tr>
+      <tr><td>B</td><td>建造模式：放置围墙 / 篝火（消耗建材），右键退出</td></tr>
+      <tr><td>T</td><td>小队自动反击 开/关</td></tr>
+      <tr><td>G</td><td>镜头跟随开关（WASD 移动镜头）</td></tr>
+      <tr><td>H</td><td>打开/关闭本说明</td></tr>
+      <tr><td>M</td><td>静音</td></tr>
+    </table>
+    <h3>🩹 身体部位与伤势</h3>
+    <ul class="tips">
+      <li>每个人都有<b>头 / 胸 / 双臂 / 双腿</b>六个部位，各自有独立血量。</li>
+      <li><b>胸腔</b>归零 = 倒地并开始流血；<b>头部</b>归零 = 直接昏迷。</li>
+      <li>流血到胸腔 -60% 就会死亡——倒地后尽快救援！</li>
+      <li><b>手臂</b>受伤：挥击变慢变轻；<b>腿</b>受伤：跑不动。</li>
+      <li>脱离战斗后会缓慢自愈；用<b>绷带（C）</b>可以快速处理伤口。</li>
+      <li>敌人不会攻击倒地者——但也不会救他们的同伴。</li>
+    </ul>
+    <h3>💡 荒原生存须知</h3>
+    <ul class="tips">
+      <li>这个世界没有任务，也没有人等你拯救——活下去就是全部。</li>
+      <li>技能<b>越用越强</b>：挨打涨韧性，挥刀涨近战，被追着跑涨闪避。</li>
+      <li>荒原有狼群出没，它们对所有人敌视——有时可以把敌人引过去。</li>
+      <li>离「枢纽镇」越远，遇到的敌人越凶。打不过就跑，跑不过就雇人。</li>
+      <li>饿了会掉血。记得囤干粮，按 F 进食。</li>
+    </ul>
+    <button id="helpClose" class="btn">继续游戏</button>
+  </div>
+</div>
+
+<!-- 开始界面：点击任意位置即可开始 -->
+<div id="startOverlay" class="overlay">
+  <div class="overlay-box center">
+    <h1>荒 原 浪 人</h1>
+    <p class="subtitle">WASTELAND RONIN · v0.4 钢铁荒原篇</p>
+    <p class="intro">一个没有任务的世界。<br>组建你的小队，在沙漠中求生、变强、厮杀——<br>断臂残腿也好，扬名立万也罢，都是你自己的故事。</p>
+    <p class="keys-note"><b>左键</b> 选择 / 点地走路 ｜ <b>右键</b> 移动 / 攻击敌人</p>
+    <p class="dim small">灵感致敬 Kenshi ｜ 纯本地运行，无需联网</p>
+    <button id="startBtn" class="btn big">⚔ 点击此处进入荒原</button>
+    <p class="dim small" style="margin-top:10px">（点击任意位置也可开始）</p>
+  </div>
+</div>
+
+<!-- 睡眠过渡 -->
+<div id="sleepOverlay" class="overlay hidden">
+  <div class="overlay-box center">
+    <h2>😴 睡眠中…</h2>
+    <p class="dim">篝火噼啪作响，风沙掠过荒原。</p>
+  </div>
+</div>
+
+<!-- 游戏结束 -->
+<div id="overOverlay" class="overlay hidden">
+  <div class="overlay-box center">
+    <h1 class="red">全军覆没</h1>
+    <p class="intro">你的小队在荒原中存活了 <b id="overDays">1</b> 天。<br>风沙很快会掩埋一切痕迹。</p>
+    <button id="restartBtn" class="btn big">↻ 再次尝试</button>
+  </div>
+</div>
+
+<script src="src/core/RNG.js"></script>
+<script src="src/core/EventBus.js"></script>
+<script src="src/core/Engine.js"></script>
+<script src="src/world/Time.js"></script>
+<script src="src/input/Camera.js"></script>
+<script src="src/input/Input.js"></script>
+<script src="src/input/RectSelect.js"></script>
+<script src="src/data/balance.js"></script>
+<script src="src/data/factions.js"></script>
+<script src="src/entities/Body.js"></script>
+<script src="src/systems/Combat.js"></script>
+<script src="src/systems/AI.js"></script>
+<script src="src/systems/Survival.js"></script>
+<script src="src/systems/Economy.js"></script>
+<script src="src/systems/Build.js"></script>
+<script src="src/world/Spawner.js"></script>
+<script src="js/game.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>
