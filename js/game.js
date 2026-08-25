@@ -85,6 +85,7 @@ var motes = [];
 var obstacles = [];
 
 var selection = [];
+var R3D_active = false; // 3D 渲染模式开关（由 js/ronin3d.js 消费）
 var res = { cats: 120, food: 2, bandage: 2, kits: 1, mats: 2, rep: [0, 0] };
 var autoDefend = true;
 
@@ -1443,6 +1444,9 @@ window.addEventListener('keydown', function (e) {
       muted = !muted;
       log(muted ? '已静音' : '声音开启', 'sys');
       break;
+    case 'KeyP':
+      toggle3D();
+      break;
     case 'Escape':
       if (buildMode > 0) { buildMode = 0; log('退出建造模式', 'sys'); }
       else if (shopOpen) closeShop();
@@ -2680,6 +2684,13 @@ function refreshTooltip() {
 }
 
 function render() {
+  if (R3D_active) {
+    /* 3D 模式：2D 画布保持透明（露出底层 WebGL），把渲染交给 ronin3d */
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    if (WR.R3D) WR.R3D.render();
+    return;
+  }
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = '#141009';
   ctx.fillRect(0, 0, W, H);
@@ -2786,13 +2797,67 @@ function init() {
 /* M0 重构（T019）：不再自动启动。由 src/main.js 装配根调用 boot()。
  * 暴露最小接口供 main/UI 总线使用。 */
 
+/* ---------------- 3D 渲染模式：世界坐标命令接口（供 js/ronin3d.js 调用） ----------------
+ * 这些函数直接复用已有的世界坐标逻辑（issueCommand / livingSquad / RectSelect），
+ * 不重写任何游戏规则——ronin3d 只负责把屏幕射线换算成 (wx, wy) 再喂进来。 */
+function zoomBy(f) {
+  var nz = clamp(zoom * f, 0.6, 1.8);
+  zoom = nz;
+  clampCam();
+}
+function toggle3D() {
+  if (!WR.R3D) { log('3D 模式不可用（Three.js 未加载）', 'bad'); return; }
+  R3D_active = !R3D_active;
+  if (WR.R3D.onToggle) WR.R3D.onToggle(R3D_active);
+  log(R3D_active ? '切换到 3D 视角（按 P 切回 2D）' : '切换回 2D 视角', 'sys');
+}
+/* type: 'left' 单选/点地走 | 'right' 移动/攻击 | 'leftdrag' 框选（opts.w0={x,y}） */
+function worldInput(type, wx, wy, opts) {
+  opts = opts || {};
+  if (!started || gameOver || helpOpen || shopOpen || sleeping) return;
+  if (buildMode > 0) {
+    if (type === 'left') placeStructure(wx, wy);
+    else if (type === 'right') { buildMode = 0; log('退出建造模式', 'sys'); }
+    return;
+  }
+  if (type === 'right') { issueCommand(wx, wy); return; }
+  if (type === 'left') {
+    var sq = livingSquad();
+    var best = null, bd = 22;
+    for (var j = 0; j < sq.length; j++) {
+      var d = dist(sq[j], { x: wx, y: wy });
+      if (d < bd) { bd = d; best = sq[j]; }
+    }
+    if (best) {
+      if (opts.shift) {
+        var idx = selection.indexOf(best);
+        if (idx >= 0) selection.splice(idx, 1); else selection.push(best);
+      } else selection = [best];
+      sfx('ui'); tutStep(1);
+    } else if (!opts.shift) {
+      issueCommand(wx, wy);
+    }
+    return;
+  }
+  if (type === 'leftdrag') {
+    var w0 = opts.w0;
+    if (!w0) return;
+    var picked = WR.RectSelect.collect(livingSquad(), w0.x, w0.y, wx, wy);
+    if (picked.length) selection = picked;
+    return;
+  }
+}
+
 /* 调试 / 自动化测试钩子（不影响正常游戏） */
 window.__ronin = {
   unitsList: function () { return units; },
   resources: function () { return res; },
   state: function () { return { started: started, day: day, time: gameTime }; },
   world: function () { return { camps: camps, structures: structures }; },
+  townsList: function () { return towns; },
+  lootList: function () { return loot; },
   selectionList: function () { return selection; },
+  isR3D: function () { return R3D_active; },
   getCam: function () { return { x: cam.x, y: cam.y, z: zoom }; },
   gates: function () {
     return { started: started, gameOver: gameOver, helpOpen: helpOpen,
@@ -2816,7 +2881,12 @@ window.WR.LegacyGame = {
   toggleAutoDefend: function () {
     autoDefend = !autoDefend;
     log(autoDefend ? '小队自动反击：开（被攻击时自动还手）' : '小队自动反击：关（完全手动指挥）', 'sys');
-  }
+  },
+  /* 3D 渲染模式接口（ronin3d.js 消费） */
+  toggle3D: toggle3D,
+  is3D: function () { return R3D_active; },
+  worldInput: worldInput,
+  zoomBy: zoomBy
 };
 
 })();

@@ -18,6 +18,17 @@ html, body {
   cursor: crosshair;
 }
 
+/* 3D 渲染层（ronin3d.js）：平时隐藏，进入 3D 模式时显示于 2D 画布之下、HUD 之上 */
+#game3d {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: none;
+}
+body.r3d #game3d { display: block; }
+body.r3d #game { pointer-events: none; background: transparent; }
+#btn3d { cursor: pointer; user-select: none; }
+
 .hidden { display: none !important; }
 .dim { opacity: .62; }
 .small { font-size: 12px; }

@@ -21,6 +21,7 @@
   <span id="resClock">☀ 白天</span>
   <span class="dim small" id="fpsMeter"></span>
   <span class="dim small">H 帮助 · M 静音</span>
+  <span id="btn3d" class="chip" title="切换 3D / 2D 视角（快捷键 P）">🧊 3D</span>
 </div>
 
 <!-- 左侧选中角色面板 -->
@@ -160,5 +161,15 @@
 <script src="src/world/Spawner.js"></script>
 <script src="js/game.js"></script>
 <script src="src/main.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="js/ronin3d.js"></script>
+<script>
+  (function () {
+    var b = document.getElementById('btn3d');
+    if (b) b.addEventListener('click', function () {
+      if (window.WR && WR.LegacyGame) WR.LegacyGame.toggle3D();
+    });
+  })();
+</script>
 </body>
 </html>
