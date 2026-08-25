@@ -22,6 +22,10 @@
       desc: '边境军火商聚集地',
       stock: ['food', 'bandage', 'mats',
               'iron', 'mace', 'katana', 'chain', 'hire']
+    },
+    '荒原游商': {
+      desc: '荒原流动商队，什么都有一点',
+      stock: ['food', 'bandage', 'campkit', 'stick', 'leather', 'hire']
     }
   };
 });

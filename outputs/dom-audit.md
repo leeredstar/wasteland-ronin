@@ -41,17 +41,17 @@
 - L70: `document.getElementById` — var canvas = document.getElementById('game');
 - L72: `document.getElementById` — var mmCanvas = document.getElementById('minimap');
 - L74: `document.getElementById` — var bodyCanvas = document.getElementById('bodyCanvas');
-- L135: `document.getElementById` — var $ = function (id) { return document.getElementById(id); };
-- L190: `document.createElement` — var li = document.createElement('li');
-- L903: `document.createElement` — var row = document.createElement('div');
-- L905: `document.createElement` — var left = document.createElement('div');
-- L907: `document.createElement` — var btn = document.createElement('button');
-- L1535: `document.getElementById` — var bar = document.getElementById('errBanner');
-- L1537: `document.createElement` — bar = document.createElement('div');
-- L1540: `document.body` — document.body.appendChild(bar);
-- L1834: `document.createElement` — var c = document.createElement('canvas');
-- L1939: `document.createElement` — var c = document.createElement('canvas');
-- L2638: `document.createElement` — cv = document.createElement('canvas');
+- L145: `document.getElementById` — var $ = function (id) { return document.getElementById(id); };
+- L200: `document.createElement` — var li = document.createElement('li');
+- L987: `document.createElement` — var rowEl = document.createElement('div');
+- L989: `document.createElement` — var left = document.createElement('div');
+- L991: `document.createElement` — var btn = document.createElement('button');
+- L1686: `document.getElementById` — var bar = document.getElementById('errBanner');
+- L1688: `document.createElement` — bar = document.createElement('div');
+- L1691: `document.body` — document.body.appendChild(bar);
+- L2155: `document.createElement` — var c = document.createElement('canvas');
+- L2276: `document.createElement` — var c = document.createElement('canvas');
+- L3108: `document.createElement` — cv = document.createElement('canvas');
 
 ## 结论
 

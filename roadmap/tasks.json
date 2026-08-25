@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-25T15:06:43.846Z",
+ "updatedAt": "2026-08-25T23:09:19.669Z",
  "total": 500,
- "done": 131,
+ "done": 139,
  "phases": [
   {
    "id": "M0",
@@ -1148,64 +1148,64 @@
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "新地点：荒原游商营地（中立流动商人）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:09:19.307Z"
   },
   {
    "id": "T133",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "新地点：废墟塔楼（高风险高回报掉落区）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:09:19.364Z"
   },
   {
    "id": "T134",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "危险纵深区：地图边缘红雾渐染警示",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:09:19.412Z"
   },
   {
    "id": "T135",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "枢纽镇扩建：围墙缺口大门造型",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:09:19.466Z"
   },
   {
    "id": "T136",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "第二城镇差异化：世界之角转型军火商货单",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:09:19.514Z"
   },
   {
    "id": "T137",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "城镇 NPC：情报贩子（付费告知最近匪巢方位）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:09:19.563Z"
   },
   {
    "id": "T138",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "拾荒系统交互打磨（进度条/结果飘字）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:09:19.618Z"
   },
   {
    "id": "T139",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "商队事件：定时沿道路移动，可选择护卫或劫掠",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:09:19.669Z"
   },
   {
    "id": "T140",

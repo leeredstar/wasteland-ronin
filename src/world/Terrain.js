@@ -187,7 +187,7 @@
     }
     var decor = genDecor(900);
 
-    /* ---------- T131: 废墟点位 ---------- */
+    /* ---------- T131/T133: 废墟点位 + 废墟塔楼 ---------- */
     function genRuins(n) {
       n = n || 12;
       var out = [];
@@ -200,6 +200,7 @@
         if (out.some(function (r) { return Math.hypot(r.x - x, r.y - y) < 1100; })) continue;
         out.push({
           id: 'ruin' + i,
+          type: 'pile',
           x: Math.round(x), y: Math.round(y),
           r: 90,
           coolUntil: 0,
@@ -210,6 +211,74 @@
       return out;
     }
     var ruins = genRuins(12);
+
+    /* T133: 废墟塔楼——高风险高回报（守匪由宿主层生成） */
+    function genTowers(n) {
+      n = n || 2;
+      var out = [];
+      for (var i = 0; out.length < n && i < n * 60; i++) {
+        var gx = hash2(i, 21, seed ^ 0x7071), gy = hash2(i, 22, seed ^ 0x7072);
+        var x = 700 + gx * (WORLD_SIZE.w - 1400);
+        var y = 700 + gy * (WORLD_SIZE.h - 1400);
+        if (!farFromTowns(x, y, 1000)) continue;
+        if (roadDist(x, y) < 420) continue;
+        if (ruins.some(function (r) { return Math.hypot(r.x - x, r.y - y) < 1300; })) continue;
+        if (out.some(function (r) { return Math.hypot(r.x - x, r.y - y) < 2200; })) continue;
+        out.push({
+          id: 'tower' + i,
+          type: 'tower',
+          x: Math.round(x), y: Math.round(y),
+          r: 130,
+          coolUntil: 0,
+          cooldown: 150,
+          tier: 3
+        });
+      }
+      return out;
+    }
+    var towers = genTowers(2);
+    for (var ti = 0; ti < towers.length; ti++) ruins.push(towers[ti]); /* 统一搜索接口 */
+
+    /* T132: 荒原游商营地——沿道路两侧布点（旅途中转站） */
+    function genMerchantCamps(n) {
+      n = n || 2;
+      var out = [];
+      var road = roads[0];
+      if (!road) return out;
+      var fracs = [0.33, 0.68];
+      for (var i = 0; i < n && i < fracs.length; i++) {
+        var t = fracs[i];
+        var idx = Math.round(t * (road.pts.length - 1));
+        var p = road.pts[idx];
+        var nxt = road.pts[Math.min(idx + 1, road.pts.length - 1)];
+        var dx = nxt.x - p.x, dy = nxt.y - p.y;
+        var l = Math.sqrt(dx * dx + dy * dy) || 1;
+        var side = i % 2 === 0 ? 1 : -1;
+        var off = 190;
+        var cx = p.x - dy / l * off * side;
+        var cy = p.y + dx / l * off * side;
+        var spot = nearestFree(cx, cy, out);
+        out.push({
+          id: 'camp' + i,
+          x: Math.round(spot.x), y: Math.round(spot.y),
+          r: 110
+        });
+      }
+      return out;
+    }
+    function nearestFree(x, y, taken) {
+      /* 简单避让：与已取点位/城镇太近就沿法线后退 */
+      var guard = 0;
+      while (guard++ < 24) {
+        var bad = !farFromTowns(x, y, 500) ||
+          taken.some(function (c) { return Math.hypot(c.x - x, c.y - y) < 1500; }) ||
+          ruins.some(function (r) { return Math.hypot(r.x - x, r.y - y) < 700; });
+        if (!bad) break;
+        x -= 240; y -= 240;
+      }
+      return { x: x, y: y };
+    }
+    var merchantCamps = genMerchantCamps(2);
 
     /* 最近的可搜索废墟（range 内）；返回废墟或 null */
     function nearestRuin(x, y, range) {
@@ -230,11 +299,18 @@
       var tier = ruin.tier;
       /* 猫币 */
       if (rng() < 0.85) loot.cats = Math.round((8 + rng() * 22) * tier);
-      /* 物资表 */
-      var table = tier === 2
-        ? ['food', 'food', 'bandage', 'mats', 'mats', 'kits']
-        : ['food', 'bandage', 'mats'];
-      var drops = 1 + (rng() < 0.45 ? 1 : 0) + (tier === 2 && rng() < 0.3 ? 1 : 0);
+      /* 物资表：塔楼(tier3)高风险高回报 */
+      var table;
+      if (tier >= 3) {
+        table = ['food', 'bandage', 'mats', 'mats', 'kits', 'kits'];
+        loot.cats = Math.round(40 + rng() * 90);   /* 塔楼必有丰厚猫币 */
+        if (rng() < 0.7) loot.kits = (loot.kits || 0) + 1;
+      } else {
+        table = tier === 2
+          ? ['food', 'food', 'bandage', 'mats', 'mats', 'kits']
+          : ['food', 'bandage', 'mats'];
+      }
+      var drops = 1 + (rng() < 0.45 ? 1 : 0) + (tier >= 2 && rng() < 0.35 ? 1 : 0);
       while (drops-- > 0) {
         var it = table[Math.floor(rng() * table.length)];
         loot[it] = (loot[it] || 0) + 1;
@@ -251,7 +327,10 @@
           samples[biomeAt((ix + 0.5) / N * WORLD_SIZE.w, (iy + 0.5) / N * WORLD_SIZE.h)]++;
         }
       }
-      return { biomes: samples, decor: decor.length, ruins: ruins.length, roads: roads.length };
+      var towerN = 0;
+      for (var i = 0; i < ruins.length; i++) if (ruins[i].type === 'tower') towerN++;
+      return { biomes: samples, decor: decor.length, ruins: ruins.length - towerN,
+               towers: towerN, merchants: merchantCamps.length, roads: roads.length };
     }
 
     return {
@@ -264,6 +343,8 @@
       decor: decor,
       roads: roads,
       ruins: ruins,
+      towers: towers,
+      merchantCamps: merchantCamps,
       nearestRuin: nearestRuin,
       scavenge: scavenge,
       farFromTowns: farFromTowns,

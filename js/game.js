@@ -131,6 +131,16 @@ var terrainChunks = new Map();    /* T129 底色分块缓存 key -> canvas */
 var terrainPaintCount = 0;        /* 本帧已绘制的块数（预算控制） */
 var ruinHintCool = 0;             /* 废墟提示节流 */
 
+/* T132-T139: 游商/塔楼/情报/拾荒通道/商队/危险边缘 */
+var scavChan = null;              /* 拾蓄进度 {u,ruin,t,dur} */
+var intelPing = null;             /* 情报标记 {x,y,until} */
+var banditAnchors = [];           /* 匪帮出没锚点（spawnGroup 时记录） */
+var caravan = null;               /* 当前商队 {members:[],attacked,fromName,toName} */
+var caravanTimer = 28;            /* 首队 28s 后出发（冒烟可见） */
+var caravansSpawned = 0;
+var caravanSide = 0;
+var dangerLogCool = 0;
+
 /* ---------------- DOM 引用 ---------------- */
 var $ = function (id) { return document.getElementById(id); };
 var elCats = $('resCats'), elFood = $('resFood'), elBandage = $('resBandage');
@@ -682,6 +692,7 @@ function spawnerCtx(minPlayerDist) {
 function spawnGroup() {
   var before = units.length;
   SpawnerSys.spawnGroup(spawnerCtx(560));
+  recordBanditAnchors(before);
   return units.length - before;
 }
 function spawnBeastPack() {
@@ -714,6 +725,49 @@ function spawnGuards() {
 }
 
 /* ---------------- 拾取（小队 + 奴隶搬运） ---------------- */
+/* T132: 荒原游商 NPC */
+function spawnMerchants() {
+  if (!terrain) return;
+  for (var i = 0; i < terrain.merchantCamps.length; i++) {
+    var c = terrain.merchantCamps[i];
+    var m = makeUnit({
+      faction: 'town', name: randName(),
+      x: c.x + rand(-20, 20), y: c.y + rand(-10, 24),
+      maxHp: 90, speed: 58, aggro: 0,
+      weapon: WEAPONS.fists, tierName: '荒原游商',
+      lootMin: 60, lootMax: 120,
+      bodyColor: '#caa04f', hairColor: '#2c2018',
+      homePoint: { x: c.x, y: c.y },
+      skills: { str: 8, tgh: 8, dodge: 8, melee: 8 }
+    });
+    m.isMerchant = true;
+    units.push(m);
+  }
+}
+
+/* T133: 废墟塔楼守匪（高风险的来源） */
+function spawnTowerGarrisons() {
+  if (!terrain) return;
+  for (var i = 0; i < terrain.towers.length; i++) {
+    var tw = terrain.towers[i];
+    var n = 2 + (i % 2);
+    for (var b = 0; b < n; b++) {
+      units.push(makeUnit({
+        faction: 'bandit', name: randName(),
+        x: tw.x + rand(-70, 70), y: tw.y + rand(-50, 70),
+        maxHp: 105, speed: 82, aggro: 330,
+        weapon: b ? WEAPONS.mace : WEAPONS.iron,
+        armor: ARMORS.leather,
+        tierName: '塔楼守匪',
+        lootMin: 30, lootMax: 80,
+        bodyColor: FACTION_COLOR.bandit, hairColor: '#20242c',
+        homePoint: { x: tw.x, y: tw.y },
+        skills: { str: 13, tgh: 12, dodge: 11, melee: 14 }
+      }));
+    }
+  }
+}
+
 function slaveList() {
   var out = [];
   for (var i = 0; i < units.length; i++) {
@@ -845,7 +899,7 @@ function openShop(town) {
   shopOpen = true;
   shopTown = town;
   tutStep(4);
-  elShopTitle.textContent = town.name + ' · 补给站';
+  elShopTitle.textContent = town.name + ' · ' + (town.merchant ? '行商货摊' : '补给站');
   renderShop();
   elShop.classList.remove('hidden');
   sfx('ui');
@@ -873,44 +927,74 @@ function priced(base) {
   return EconomySys.price(idx >= 0 ? res.rep[idx] : 0, base);
 }
 
+/* T136: 商店货单数据驱动（src/data/shops.js 为唯一事实源，世界之角=军火商差异化） */
+var SHOP_QTY = { bandage: 2, mats: 5 };
+function shopItemRow(id) {
+  if (id === 'hire') {
+    var sq0 = livingSquad();
+    return { act: 'hire', title: '🧑‍🤝‍🧑 招募同伴',
+      desc: '小队人数 ' + sq0.length + '/5 · 剑客/苦力/猎手随机',
+      cost: priced(250), disabled: res.cats < priced(250) || sq0.length >= 5 };
+  }
+  var d = WR.Items.get(id);
+  if (!d) return null;
+  var qty = SHOP_QTY[id] || 1;
+  var cost = priced(d.price * qty);
+  var selU = firstActor();
+  var title = d.icon + ' ' + d.name + (qty > 1 ? ' ×' + qty : '');
+  var desc;
+  switch (d.type) {
+    case 'weapon':
+      desc = selU ? '给 ' + selU.name + '（当前：' + selU.weapon.name + '）· 伤害 ' + d.dmg
+                  : '伤害 ' + d.dmg + ' · 触及 ' + d.reach;
+      break;
+    case 'armor':
+      desc = selU ? '给 ' + selU.name + '（减伤 ' + d.def + '）' : '固定减伤 ' + d.def;
+      break;
+    case 'consumable':
+      desc = d.use === 'food' ? '恢复 45 点饱食度' : '包扎伤口（按 C 使用）';
+      break;
+    case 'kit': desc = '就地扎营（V）：篝火+帐篷，可睡觉恢复'; break;
+    case 'material': desc = '建造围墙/篝火（B 进入建造模式）'; break;
+    case 'prosthetic': desc = selU ? '装到首个缺失的手臂/腿：永不残废，力量+2' : '先选择队员'; break;
+    default: desc = '';
+  }
+  var dis = res.cats < cost;
+  if (d.type === 'weapon' && selU && selU.weapon.key === id) dis = true;
+  if (d.type === 'armor' && selU && selU.armor && selU.armor.key === id) dis = true;
+  if (d.type === 'prosthetic' && !selU) dis = true;
+  return { act: id === 'roboLimb' ? 'robo' : id, title: title, desc: desc, cost: cost, disabled: dis };
+}
+
 function renderShop() {
   var repIdx = towns.indexOf(shopTown);
   var rp = repIdx >= 0 ? res.rep[repIdx] : 0;
   elShopInfo.textContent = '队伍：🪙 ' + res.cats + ' 猫 ／ 🍖 ' + res.food + ' ／ 🩹 ' + res.bandage +
     ' ／ 🏕️ ' + res.kits + ' ／ 🧱 ' + res.mats +
-    ' ｜ 本镇声望 ' + rp + '（' + Math.round((townDiscount() - 1) * 100) + '% 价格）';
-  var selU = firstActor();
-  var sq = livingSquad();
-  function wDis(key) { return !selU || selU.weapon.key === key; }
-  function aDis(key) { return !selU || (selU.armor && selU.armor.key === key); }
-  var items = [
-    { act: 'food', title: '🍖 干粮 ×1', desc: '恢复 45 点饱食度', cost: priced(25), disabled: res.cats < priced(25) },
-    { act: 'bandage', title: '🩹 绷带 ×2', desc: '包扎伤口（按 C 使用）', cost: priced(45), disabled: res.cats < priced(45) },
-    { act: 'campkit', title: '🏕️ 营地套装', desc: '就地扎营（V）：篝火+帐篷，可睡觉恢复', cost: priced(80), disabled: res.cats < priced(80) },
-    { act: 'mats', title: '🧱 建筑材料 ×5', desc: '建造围墙/篝火（B 进入建造模式）', cost: priced(100), disabled: res.cats < priced(100) },
-    { act: 'robo', title: '🦾 机械义肢', desc: selU ? '装到首个缺失的手臂/腿：永不残废，力量+2' : '先选择队员', cost: priced(300), disabled: res.cats < priced(300) || !selU },
-    { act: 'iron', title: '🗡️ 铁刀', desc: selU ? '给 ' + selU.name + '（当前：' + selU.weapon.name + '）' : '先选择队员', cost: priced(180), disabled: res.cats < priced(180) || wDis('iron') },
-    { act: 'spear', title: '🔱 长枪', desc: selU ? '给 ' + selU.name + '（一寸长一寸强）' : '先选择队员', cost: priced(230), disabled: res.cats < priced(230) || wDis('spear') },
-    { act: 'mace', title: '🔨 战锤', desc: selU ? '给 ' + selU.name + '（沉重但致命）' : '先选择队员', cost: priced(270), disabled: res.cats < priced(270) || wDis('mace') },
-    { act: 'katana', title: '⚔️ 野太刀', desc: selU ? '给 ' + selU.name + '（当前：' + selU.weapon.name + '）' : '先选择队员', cost: priced(650), disabled: res.cats < priced(650) || wDis('katana') },
-    { act: 'leather', title: '🧥 破旧皮甲', desc: selU ? '给 ' + selU.name + '（减伤 2）' : '先选择队员', cost: priced(130), disabled: res.cats < priced(130) || aDis('leather') },
-    { act: 'chain', title: '🛡️ 锁子甲', desc: selU ? '给 ' + selU.name + '（减伤 4）' : '先选择队员', cost: priced(430), disabled: res.cats < priced(430) || aDis('chain') },
-    { act: 'hire', title: '🧑‍🤝‍🧑 招募同伴', desc: '小队人数 ' + sq.length + '/5 · 剑客/苦力/猎手随机', cost: priced(250), disabled: res.cats < priced(250) || sq.length >= 5 }
-  ];
+    (repIdx >= 0 ? ' ｜ 本镇声望 ' + rp + '（' + Math.round((townDiscount() - 1) * 100) + '% 价格）'
+                 : ' ｜ ' + (shopTown && shopTown.desc ? shopTown.desc : '行商定价'));
+  var stockIds = (WR.Shops && shopTown && WR.Shops[shopTown.name] && WR.Shops[shopTown.name].stock)
+    ? WR.Shops[shopTown.name].stock
+    : ['food', 'bandage', 'campkit', 'mats', 'iron', 'leather', 'hire']; /* 兜底通用货单 */
+  var items = [];
+  for (var q = 0; q < stockIds.length; q++) {
+    var row = shopItemRow(stockIds[q]);
+    if (row) items.push(row);
+  }
   elShopItems.innerHTML = '';
   for (var k = 0; k < items.length; k++) {
     var it = items[k];
-    var row = document.createElement('div');
-    row.className = 'shop-item';
+    var rowEl = document.createElement('div');
+    rowEl.className = 'shop-item';
     var left = document.createElement('div');
     left.innerHTML = '<div>' + it.title + '</div><div class="desc">' + it.desc + '</div>';
     var btn = document.createElement('button');
     btn.textContent = it.cost + ' 猫';
     btn.disabled = it.disabled;
     btn.setAttribute('data-act', it.act);
-    row.appendChild(left);
-    row.appendChild(btn);
-    elShopItems.appendChild(row);
+    rowEl.appendChild(left);
+    rowEl.appendChild(btn);
+    elShopItems.appendChild(rowEl);
   }
 }
 
@@ -958,6 +1042,9 @@ elShopItems.addEventListener('click', function (e) {
     } else {
       log(selU.name + ' 的四肢完好，暂时不需要义肢', 'sys');
     }
+  } else if (act === 'stick' && selU && res.cats >= priced(15)) {
+    res.cats -= priced(15); selU.weapon = WEAPONS.stick;
+    equipMsg(selU, '木棍');
   } else if (act === 'iron' && selU && res.cats >= priced(180)) {
     res.cats -= priced(180); selU.weapon = WEAPONS.iron;
     equipMsg(selU, '铁刀');
@@ -1010,43 +1097,107 @@ function equipArmorMsg(u, what) {
   sfx('coin');
 }
 
-function interact() {
-  if (shopOpen) { closeShop(); return; }
-  var town = nearestTownOfSelection(175);
-  if (town) { openShop(town); return; }
-  /* M5/T131: 废墟搜索 */
-  if (tryScavenge()) return;
-  log('附近没有城镇或废墟', 'sys');
+/* T137: 情报贩子（枢纽镇固定摊位） */
+function brokerPos() {
+  var t0 = towns[0];
+  return { x: t0.x - 150, y: t0.y + 55 };
+}
+function tryTalkBroker() {
+  if (!started) return false;
+  var bp = brokerPos();
+  for (var i = 0; i < selection.length; i++) {
+    var u = selection[i];
+    if (u.faction !== 'player' || u.state === 'dead' || isDown(u)) continue;
+    if (dist(u, bp) > 70) continue;
+    if (res.cats < 40) { log('情报贩子：「40 猫，不还价。」——你的钱不够', 'sys'); return true; }
+    /* 找最近的匪帮出没记录（600s 内） */
+    var best = null;
+    for (var a = 0; a < banditAnchors.length; a++) {
+      if (gameTime - banditAnchors[a].t > 600) continue;
+      if (!best || banditAnchors[a].t > best.t) best = banditAnchors[a];
+    }
+    if (!best) { log('情报贩子：「最近风声紧，匪帮都缩起来了。这单不做。」', 'sys'); return true; }
+    res.cats -= 40;
+    intelPing = { x: best.x, y: best.y, until: gameTime + 90 };
+    var c = squadCentroid();
+    var dx = best.x - c.x, dy = best.y - c.y;
+    var dd = Math.sqrt(dx * dx + dy * dy) || 1;
+    var dirs = ['东', '东南', '南', '西南', '西', '西北', '北', '东北'];
+    var ang = Math.atan2(dy, dx);
+    var dir = dirs[((Math.round(ang / (Math.PI / 4)) % 8) + 8) % 8];
+    log('情报贩子：「' + dir + '方约 ' + Math.round(dd / 100) * 100 + ' 步外，匪帮在那一带扎营。地图上有标记，快去快回。」', 'gold');
+    addText(u.x, u.y - 36, '-40 猫 · 获得情报', '#ffd97a');
+    sfx('coin');
+    return true;
+  }
+  return false;
 }
 
-/* T131: 搜索最近的可交互废墟（小队任一成员在范围内即可） */
+/* T132: 荒原游商营地交易 */
+function tryMerchantShop() {
+  for (var i = 0; i < selection.length; i++) {
+    var u = selection[i];
+    if (u.faction !== 'player' || u.state === 'dead' || isDown(u)) continue;
+    for (var j = 0; j < units.length; j++) {
+      var m = units[j];
+      if (!m.isMerchant || m.state === 'dead') continue;
+      if (dist(u, m) < 95) { openShop({ name: '荒原游商', x: m.x, y: m.y, merchant: true }); return true; }
+    }
+  }
+  return false;
+}
+
+function interact() {
+  if (shopOpen) { closeShop(); return; }
+  if (tryTalkBroker()) return;
+  if (tryMerchantShop()) return;
+  /* M5/T131+T138: 废墟搜索（1.6s 进度通道） */
+  if (tryScavenge()) return;
+  var town = nearestTownOfSelection(175);
+  if (town) { openShop(town); return; }
+  log('附近没有可以交互的对象（城镇商店 / 废墟 / 游商 / 情报贩子）', 'sys');
+}
+
+/* T131: 开始搜索最近的可交互废墟（T138 改为 1.6s 引导通道） */
 function tryScavenge() {
   if (!terrain) return false;
   for (var i = 0; i < selection.length; i++) {
     var u = selection[i];
     if (u.faction !== 'player' || u.state === 'dead' || isDown(u)) continue;
+    if (scavChan && scavChan.u === u) return true; /* 已在进行中 */
     var ru = terrain.nearestRuin(u.x, u.y, 95);
     if (!ru) continue;
     if (gameTime < ru.coolUntil) {
-      log('这处废墟刚被搜刮过，还没刷新（冷却中）', 'sys');
+      log(ru.type === 'tower' ? '塔楼刚被人搜过，还没刷新（冷却中）' : '这处废墟刚被搜刮过，还没刷新（冷却中）', 'sys');
       addText(u.x, u.y - 34, '冷却中…', '#b8a888');
       return true;
     }
-    var found = terrain.scavenge(ru, gameTime, function () { return WR.App.rng.next(); });
-    if (!found) return true;
-    var parts = [];
-    if (found.cats) { res.cats += found.cats; parts.push(found.cats + ' 猫'); }
-    ['food', 'bandage', 'mats', 'kits'].forEach(function (k) {
-      if (found[k]) { res[k] += found[k]; parts.push(k + ' ×' + found[k]); }
-    });
-    log(u.name + ' 在废墟里翻到了: ' + (parts.join('、') || '灰尘'), 'good');
-    addText(ru.x, ru.y - 40, '+' + parts.join(' '), '#ffd97a');
-    addRing(ru.x, ru.y);
-    sfx('coin');
+    if (ru.type === 'tower') log('搜索塔楼废墟…（守匪的注视下翻找值钱的玩意）', 'sys');
+    scavChan = { u: u, ruin: ru, t: 0, dur: 1.6 };
+    addText(u.x, u.y - 38, '搜索中…', '#e8d8a8');
     tutStep(1);
     return true;
   }
   return false;
+}
+
+function finishScavenge(ch) {
+  var found = terrain.scavenge(ch.ruin, gameTime, function () { return WR.App.rng.next(); });
+  if (!found) return;
+  applyLoot(found, ch.ruin.x, ch.ruin.y, ch.u ? ch.u.name : '');
+}
+
+function applyLoot(found, x, y, who) {
+  var parts = [];
+  if (found.cats) { res.cats += found.cats; parts.push(found.cats + ' 猫'); }
+  ['food', 'bandage', 'mats', 'kits'].forEach(function (k) {
+    if (found[k]) { res[k] += found[k]; parts.push(k + ' ×' + found[k]); }
+  });
+  var prefix = who ? who + ' ' : '';
+  log(prefix + '搜出了: ' + (parts.join('、') || '灰尘'), 'good');
+  addText(x, y - 40, '+' + parts.join(' '), '#ffd97a');
+  addRing(x, y);
+  sfx('coin');
 }
 
 /* ---------------- v0.3 营地 / 睡眠 / 俘虏 / 建造 ---------------- */
@@ -1617,6 +1768,10 @@ function update(dt) {
   tod = nt % 1;
   shakeT = Math.max(0, shakeT - dt * 10);
 
+  updateScavChan(dt);
+  updateCaravan(dt);
+  updateDangerEdge(dt);
+
   // 匪徒生成
   spawnTimer -= dt;
   if (spawnTimer <= 0) {
@@ -1686,6 +1841,172 @@ function update(dt) {
   refreshHUD();
   refreshSquadBar();
   checkGameOver();
+}
+
+/* ---------------- T138: 拾荒进度通道 ---------------- */
+function updateScavChan(dt) {
+  if (!scavChan) return;
+  var u = scavChan.u, ru = scavChan.ruin;
+  var broken = !u || u.state === 'dead' || isDown(u) ||
+               !terrain || dist(u, ru) > 120 ||
+               (u.moveTarget && dist(u.moveTarget, { x: u.x, y: u.y }) > 4);
+  if (broken) {
+    if (u && u.state !== 'dead') addText(u.x, u.y - 36, '搜索被打断', '#e0a0a0');
+    scavChan = null;
+    return;
+  }
+  scavChan.t += dt;
+  if (scavChan.t >= scavChan.dur) {
+    finishScavenge(scavChan);
+    scavChan = null;
+  }
+}
+
+/* ---------------- T139: 商队事件 ---------------- */
+function spawnCaravan() {
+  if (!terrain || !terrain.roads.length) return;
+  var a = caravanSide % 2, b = 1 - a;
+  caravanSide++;
+  var pts = terrain.roads[0].pts.slice();
+  if (a === 1) pts.reverse();
+  var fromTown = towns[a], toTown = towns[b];
+  var members = [];
+  var mk = function (opts) {
+    var u = makeUnit(opts);
+    u.routePts = pts;
+    u.routeIdx = 0;
+    u.isCaravan = true;
+    members.push(u);
+    units.push(u);
+    return u;
+  };
+  mk({
+    faction: 'town', name: randName(),
+    x: pts[0].x + rand(-30, 30), y: pts[0].y + rand(-30, 30),
+    maxHp: 110, speed: 78, aggro: 0,
+    weapon: WEAPONS.stick, tierName: '商队头领',
+    lootMin: 140, lootMax: 260,
+    bodyColor: '#c8a05a', hairColor: '#3a2c1e',
+    homePoint: { x: pts[0].x, y: pts[0].y },
+    skills: { str: 10, tgh: 10, dodge: 10, melee: 10 }
+  });
+  for (var g = 0; g < 2; g++) {
+    mk({
+      faction: 'town', name: randName(),
+      x: pts[0].x + rand(-46, 46), y: pts[0].y + rand(-46, 46),
+      maxHp: 115, speed: 80, aggro: 240,
+      weapon: g ? WEAPONS.spear : WEAPONS.iron,
+      armor: ARMORS.leather, tierName: '商队护卫',
+      lootMin: 40, lootMax: 90,
+      bodyColor: FACTION_COLOR.town, hairColor: '#4a342a',
+      homePoint: { x: pts[0].x, y: pts[0].y },
+      skills: { str: 14, tgh: 13, dodge: 12, melee: 15 }
+    });
+  }
+  caravan = { members: members, attacked: false, fromName: fromTown.name, toName: toTown.name };
+  caravansSpawned++;
+  log('一支商队从 ' + fromTown.name + ' 出发前往 ' + toTown.name + '——护卫有赏，劫掠发财。', 'sys');
+}
+
+function updateCaravan(dt) {
+  /* 未激活：计时生成 */
+  if (!caravan) {
+    caravanTimer -= dt;
+    if (caravanTimer <= 0) { spawnCaravan(); caravanTimer = rand(110, 170); }
+    return;
+  }
+  var alive = [];
+  var leader = null;
+  for (var i = 0; i < caravan.members.length; i++) {
+    var m = caravan.members[i];
+    if (m.state !== 'dead') alive.push(m);
+    /* 玩家下手 → 劫掠判定（战斗系统会把 lastAttacker 挂在受害者身上） */
+    if (m.lastAttacker && m.lastAttacker.faction === 'player' && m.faction === 'town') {
+      caravan.attacked = true;
+    }
+    if (m.tierName === '商队头领' && m.state !== 'dead') leader = m;
+  }
+  if (!alive.length || !leader) {
+    caravan = null;           /* 全灭：尸体与掉落留给玩家 */
+    return;
+  }
+  /* 沿道路折线行进 */
+  for (var j = 0; j < alive.length; j++) {
+    var c = alive[j];
+    if (isDown(c)) continue;
+    if (c.attackTarget) continue;   /* 正在战斗：交给战斗系统 */
+    var pt = c.routePts[Math.min(c.routeIdx, c.routePts.length - 1)];
+    if (dist(c, pt) < 34) {
+      c.routeIdx++;
+      if (c.routeIdx >= c.routePts.length) { arriveCaravan(); return; }
+      pt = c.routePts[c.routeIdx];
+    }
+    moveToward(c, pt.x, pt.y, dt);
+  }
+}
+
+function arriveCaravan() {
+  var cen = squadCentroid();
+  var leader = null;
+  for (var i = 0; i < caravan.members.length; i++) {
+    var m = caravan.members[i];
+    if (m.tierName === '商队头领') leader = m;
+  }
+  if (!caravan.attacked && cen && leader && dist(cen, leader) < 420) {
+    res.cats += 60;
+    res.rep[0] += 3;
+    log('商队安全抵达 ' + caravan.toName + '！头领付给你 60 猫护卫费，枢纽镇声望 +3', 'gold');
+    addText(leader.x, leader.y - 40, '+60 猫 护卫费', '#ffd97a');
+    sfx('coin');
+  } else if (caravan.attacked) {
+    log('遭劫后的商队跌跌撞撞抵达了 ' + caravan.toName + '。', 'sys');
+  }
+  /* 人马退场（含尸体一并清理，避免残骸堆积在路上） */
+  for (var k = 0; k < caravan.members.length; k++) {
+    var idx = units.indexOf(caravan.members[k]);
+    if (idx >= 0) units.splice(idx, 1);
+  }
+  caravan = null;
+}
+
+/* ---------------- T134: 危险纵深区（地图边缘）红雾警示 ---------------- */
+function updateDangerEdge(dt) {
+  if (!started) return;
+  var cen = squadCentroid();
+  if (!cen) return;
+  var minD = Math.min(cen.x, cen.y, WORLD.w - cen.x, WORLD.h - cen.y);
+  dangerEdgeF = clamp(1 - minD / 700, 0, 1);
+  if (dangerEdgeF > 0.55 && gameTime > dangerLogCool) {
+    dangerLogCool = gameTime + 25;
+    log('警告：正在深入危险纵深区——匪患与荒兽出没，随时可能遇袭', 'bad');
+  }
+}
+var dangerEdgeF = 0;
+
+/* T134: 边缘红雾（屏幕空间径向渐变） */
+function drawDangerEdge() {
+  if (dangerEdgeF <= 0.02 || R3D_active) return;
+  var pulse = 0.75 + 0.25 * Math.sin(gameTime * 2.4);
+  var a = dangerEdgeF * 0.42 * pulse;
+  var cxp = W / 2, cyp = H / 2;
+  var innerR = Math.min(W, H) * 0.32;
+  var outerR = Math.sqrt(W * W + H * H) * 0.62;
+  var g = ctx.createRadialGradient(cxp, cyp, innerR, cxp, cyp, outerR);
+  g.addColorStop(0, 'rgba(150,20,10,0)');
+  g.addColorStop(1, 'rgba(150,20,10,' + a.toFixed(3) + ')');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+/* ---------------- 匪帮锚点记录（供情报贩子 T137 使用） ---------------- */
+function recordBanditAnchors(beforeLen) {
+  for (var i = beforeLen; i < units.length; i++) {
+    var f = units[i].faction;
+    if (f === 'bandit' || f === 'hungry') {
+      banditAnchors.push({ x: units[i].x, y: units[i].y, t: gameTime });
+      if (banditAnchors.length > 30) banditAnchors.shift();
+    }
+  }
 }
 
 function checkGameOver() {
@@ -1898,6 +2219,22 @@ function buildObstacles() {
   for (var d = 0; d < decor.length; d++) {
     if (decor[d].solid) obstacles.push({ x: decor[d].x, y: decor[d].y, r: 13 * decor[d].s });
   }
+  /* T135: 枢纽镇围墙碰撞（大门缺口可通行） */
+  if (towns.length > 1) {
+    var t0 = towns[0];
+    var ga = Math.atan2(towns[1].y - t0.y, towns[1].x - t0.x);
+    var gapA = 0.46;   /* 比视觉缺口(0.34)略宽，避免门口卡碰撞 */
+    var wrr = t0.r + 14;
+    for (var wa = 0; wa < TAU - 0.01; wa += 0.17) {
+      var diff = Math.abs(Math.atan2(Math.sin(wa - ga), Math.cos(wa - ga)));
+      if (diff < gapA) continue;
+      obstacles.push({
+        x: t0.x + Math.cos(wa) * wrr,
+        y: t0.y + Math.sin(wa) * wrr,
+        r: 15
+      });
+    }
+  }
 }
 
 function initMotes() {
@@ -2061,43 +2398,124 @@ function drawRoads() {
   ctx.restore();
 }
 
-/* T131: 废墟点位渲染（残墙 + 板条箱；冷却中变暗淡） */
+/* T131/T133: 废墟点位渲染（残墙+板条箱；塔楼=断塔；冷却中变暗淡） */
 function drawRuins() {
   if (!terrain) return;
   for (var i = 0; i < terrain.ruins.length; i++) {
     var ru = terrain.ruins[i];
-    if (!inView(ru.x, ru.y, 160)) continue;
+    if (!inView(ru.x, ru.y, 200)) continue;
     var cooling = gameTime < ru.coolUntil;
     var rng = terrainChunkRng(ru.x | 0, ru.y | 0);
     ctx.save();
     ctx.translate(ru.x, ru.y);
     ctx.globalAlpha = cooling ? 0.45 : 0.95;
-    /* 残墙碎片 */
-    for (var w = 0; w < 5; w++) {
-      var a = rng() * TAU, rr = 24 + rng() * 46;
-      ctx.save();
-      ctx.rotate(a);
+    if (ru.type === 'tower') {
+      /* T133: 断塔——两段残墙 + 塔基 */
+      ctx.fillStyle = '#6e675e';
+      ctx.fillRect(-34, -18, 68, 30);            /* 塔基 */
+      ctx.fillStyle = '#7d766c';
+      ctx.fillRect(-26, -78, 22, 62);            /* 左残墙 */
       ctx.fillStyle = '#8d857a';
-      ctx.fillRect(rr, -6 - rng() * 8, 14 + rng() * 12, 12 + rng() * 10);
-      ctx.fillStyle = 'rgba(0,0,0,.25)';
-      ctx.fillRect(rr, 4, 14 + rng() * 12, 4);
-      ctx.restore();
+      ctx.fillRect(4, -58, 20, 42);              /* 右残墙 */
+      ctx.fillStyle = 'rgba(0,0,0,.28)';
+      ctx.fillRect(-26, -24, 22, 8);
+      ctx.fillRect(4, -22, 20, 8);
+      ctx.strokeStyle = '#4f483e';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-34, -18, 68, 30);
+      /* 门洞 */
+      ctx.fillStyle = '#2c261c';
+      ctx.fillRect(-9, -14, 18, 26);
+    } else {
+      for (var w = 0; w < 5; w++) {
+        var a = rng() * TAU, rr = 24 + rng() * 46;
+        ctx.save();
+        ctx.rotate(a);
+        ctx.fillStyle = '#8d857a';
+        ctx.fillRect(rr, -6 - rng() * 8, 14 + rng() * 12, 12 + rng() * 10);
+        ctx.fillStyle = 'rgba(0,0,0,.25)';
+        ctx.fillRect(rr, 4, 14 + rng() * 12, 4);
+        ctx.restore();
+      }
+      ctx.fillStyle = '#7a5f38';
+      ctx.fillRect(-10, -8, 22, 18);
+      ctx.strokeStyle = '#5b4426';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-10, -8, 22, 18);
+      ctx.beginPath(); ctx.moveTo(-10, -8); ctx.lineTo(12, 10); ctx.stroke();
     }
-    /* 板条箱 */
-    ctx.fillStyle = '#7a5f38';
-    ctx.fillRect(-10, -8, 22, 18);
-    ctx.strokeStyle = '#5b4426';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(-10, -8, 22, 18);
-    ctx.beginPath(); ctx.moveTo(-10, -8); ctx.lineTo(12, 10); ctx.stroke();
     /* 可搜索时的微光标记 */
     if (!cooling) {
       ctx.globalAlpha = 0.55 + 0.35 * Math.sin(gameTime * 3);
       ctx.fillStyle = '#ffd97a';
-      ctx.beginPath(); ctx.arc(0, -26, 3.2, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, ru.type === 'tower' ? -92 : -26, 3.2, 0, TAU); ctx.fill();
     }
     ctx.restore();
+
+    /* T138: 搜索进度弧 */
+    if (scavChan && scavChan.ruin === ru) {
+      var fr = clamp(scavChan.t / scavChan.dur, 0, 1);
+      ctx.strokeStyle = 'rgba(0,0,0,.45)';
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(ru.x, ru.y - (ru.type === 'tower' ? 100 : 40), 16, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = '#ffd97a';
+      ctx.beginPath();
+      ctx.arc(ru.x, ru.y - (ru.type === 'tower' ? 100 : 40), 16, -Math.PI / 2, -Math.PI / 2 + fr * TAU);
+      ctx.stroke();
+    }
   }
+}
+
+/* T132: 荒原游商营地渲染 */
+function drawMerchantCamps() {
+  if (!terrain) return;
+  for (var i = 0; i < terrain.merchantCamps.length; i++) {
+    var c = terrain.merchantCamps[i];
+    if (!inView(c.x, c.y, 180)) continue;
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    /* 帐篷 */
+    ctx.fillStyle = 'rgba(0,0,0,.25)';
+    ctx.beginPath(); ctx.ellipse(0, 14, 46, 12, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#96713d';
+    ctx.beginPath();
+    ctx.moveTo(-42, 12); ctx.lineTo(0, -44); ctx.lineTo(42, 12); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#74572c';
+    ctx.beginPath();
+    ctx.moveTo(-10, 12); ctx.lineTo(0, -12); ctx.lineTo(10, 12); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#b98a4a';
+    ctx.fillRect(-38, 4, 76, 8);
+    /* 货箱 */
+    ctx.fillStyle = '#7a5f38';
+    ctx.fillRect(52, -2, 20, 16);
+    ctx.strokeStyle = '#5b4426';
+    ctx.strokeRect(52, -2, 20, 16);
+    ctx.restore();
+    /* 名牌与提示 */
+    ctx.font = 'bold 13px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(0,0,0,.6)';
+    ctx.strokeText('游商营地', c.x, c.y - 58);
+    ctx.fillStyle = '#ffd97a';
+    ctx.fillText('游商营地', c.x, c.y - 58);
+    if (started && nearestDistToSelection(c) < 130) {
+      ctx.font = 'bold 13px "Microsoft YaHei", sans-serif';
+      ctx.strokeText('[E] 交易', c.x, c.y - 40);
+      ctx.fillStyle = '#ffe9ad';
+      ctx.fillText('[E] 交易', c.x, c.y - 40);
+    }
+  }
+}
+function nearestDistToSelection(pt) {
+  var best = Infinity;
+  for (var i = 0; i < selection.length; i++) {
+    if (selection[i].state === 'dead') continue;
+    best = Math.min(best, dist(selection[i], pt));
+  }
+  return best;
 }
 
 function drawDecor() {
@@ -2211,6 +2629,58 @@ function drawTowns() {
       ctx.fillText('[E] 商店 · 招募', sx, sy - 24);
       ctx.globalAlpha = 1;
     }
+    /* T135/T137: 枢纽镇专属——围墙大门 + 情报贩子 */
+    if (t === 0) {
+      drawHubWall(town);
+      var bp = brokerPos();
+      ctx.save();
+      ctx.translate(bp.x, bp.y);
+      ctx.fillStyle = 'rgba(0,0,0,.28)';
+      ctx.beginPath(); ctx.ellipse(0, 8, 10, 4, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#54466b';
+      ctx.beginPath(); ctx.arc(0, -2, 9, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#3d3352';
+      ctx.beginPath(); ctx.arc(0, -6, 6, Math.PI, TAU); ctx.fill();
+      ctx.fillStyle = '#e8c56a';
+      ctx.beginPath(); ctx.arc(2.5, -5, 1.3, 0, TAU); ctx.fill();
+      ctx.restore();
+      if (started && nearestDistToSelection(bp) < 110) {
+        ctx.font = 'bold 13px "Microsoft YaHei", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(0,0,0,.6)';
+        ctx.strokeText('[E] 情报（40猫）', bp.x, bp.y - 22);
+        ctx.fillStyle = '#d8c6ff';
+        ctx.fillText('[E] 情报（40猫）', bp.x, bp.y - 22);
+      }
+    }
+  }
+}
+
+/* T135: 枢纽镇围墙（朝世界之角方向留大门缺口） */
+function drawHubWall(town) {
+  if (!towns[1]) return;
+  var ga = Math.atan2(towns[1].y - town.y, towns[1].x - town.x);
+  var gap = 0.34;
+  var rr = town.r + 14;
+  ctx.strokeStyle = '#77694f';
+  ctx.lineWidth = 16;
+  ctx.beginPath();
+  ctx.arc(town.x, town.y, rr, ga + gap, ga - gap + TAU);
+  ctx.stroke();
+  ctx.strokeStyle = '#9c8c68';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(town.x, town.y, rr + 4, ga + gap, ga - gap + TAU);
+  ctx.stroke();
+  for (var s = -1; s <= 1; s += 2) {
+    var pa = ga + s * gap;
+    var px = town.x + Math.cos(pa) * rr, py = town.y + Math.sin(pa) * rr;
+    ctx.fillStyle = '#5a4c34';
+    ctx.fillRect(px - 9, py - 9, 18, 18);
+    ctx.strokeStyle = '#3f3421';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px - 9, py - 9, 18, 18);
   }
 }
 
@@ -2874,8 +3344,28 @@ function drawMinimap() {
     /* 废墟 */
     mmCtx.fillStyle = '#b06a4a';
     for (var ri = 0; ri < terrain.ruins.length; ri++) {
+      if (terrain.ruins[ri].type === 'tower') continue;
       mmCtx.fillRect(terrain.ruins[ri].x * k - 1.5, terrain.ruins[ri].y * k - 1.5, 3, 3);
     }
+    /* 塔楼（更大更醒目） */
+    mmCtx.fillStyle = '#a03428';
+    for (var tw = 0; tw < terrain.towers.length; tw++) {
+      mmCtx.fillRect(terrain.towers[tw].x * k - 2.5, terrain.towers[tw].y * k - 2.5, 5, 5);
+    }
+    /* 游商营地 */
+    mmCtx.fillStyle = '#ffffff';
+    for (var mc = 0; mc < terrain.merchantCamps.length; mc++) {
+      mmCtx.fillRect(terrain.merchantCamps[mc].x * k - 1.5, terrain.merchantCamps[mc].y * k - 1.5, 3, 3);
+    }
+  }
+  /* T137 情报标记（90s 内脉动红圈） */
+  if (intelPing && gameTime < intelPing.until) {
+    var pk = 2 + Math.sin(gameTime * 6) * 1.2;
+    mmCtx.strokeStyle = 'rgba(255,70,50,.9)';
+    mmCtx.lineWidth = 1.5;
+    mmCtx.beginPath();
+    mmCtx.arc(intelPing.x * k, intelPing.y * k, 3.5 + pk, 0, TAU);
+    mmCtx.stroke();
   }
   mmCtx.fillStyle = '#ffd97a';
   for (var t = 0; t < towns.length; t++) {
@@ -2969,6 +3459,7 @@ function render() {
   drawDecor();
   drawTowns();
   drawRuins();
+  drawMerchantCamps();
   drawStructures();
   drawDecals();
   drawMotes();
@@ -2979,6 +3470,7 @@ function render() {
   ctx.restore();
 
   drawNightAndDusk();
+  drawDangerEdge();
   drawLights();
   drawVignette();
   drawBoxSelect();
@@ -3023,6 +3515,8 @@ function init() {
   genDecor();
   initMotes();
   spawnGuards();
+  spawnMerchants();       /* T132 游商 */
+  spawnTowerGarrisons();  /* T133 塔楼守匪 */
 
   for (var i = 0; i < 6; i++) spawnGroup();
   for (var b = 0; b < 3; b++) spawnBeastPack();
@@ -3119,6 +3613,8 @@ window.__ronin = {
   terrainInfo: function () { return terrain ? terrain.stats() : null; },
   ruinsList: function () { return terrain ? terrain.ruins : []; },
   scavengeNearest: function () { return tryScavenge(); },
+  caravanStats: function () { return { spawned: caravansSpawned, active: !!caravan }; },
+  intelPingInfo: function () { return intelPing && gameTime < intelPing.until ? intelPing : null; },
   gates: function () {
     return { started: started, gameOver: gameOver, helpOpen: helpOpen,
              shopOpen: shopOpen, sleeping: sleeping, buildMode: buildMode };

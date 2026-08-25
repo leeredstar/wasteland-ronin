@@ -276,6 +276,13 @@ try {
   if (tinfo.roads < 1) throw new Error('no roads generated');
   if (typeof R.scavengeNearest() !== 'boolean') throw new Error('scavengeNearest did not return bool');
   console.log('terrain:', JSON.stringify(tinfo));
+  /* ---- T132-T139 断言：塔楼/游商/商队/情报钩子 ---- */
+  if (!(tinfo.towers >= 2)) throw new Error('expected >=2 towers, got ' + tinfo.towers);
+  if (!(tinfo.merchants >= 2)) throw new Error('expected >=2 merchant camps, got ' + tinfo.merchants);
+  if (!R.caravanStats) throw new Error('caravanStats hook missing');
+  if (!(R.caravanStats().spawned >= 1)) throw new Error('caravan never spawned');
+  if (typeof R.intelPingInfo() !== 'object' && R.intelPingInfo() !== null) throw new Error('intelPingInfo bad');
+  console.log('caravan:', JSON.stringify(R.caravanStats()));
   console.log('SMOKE PASS');
 } catch (err) {
   console.error('SMOKE FAIL:', (err && err.stack) || err);
