@@ -141,6 +141,15 @@ var caravansSpawned = 0;
 var caravanSide = 0;
 var dangerLogCool = 0;
 
+/* T140-T145: 狼巢 / 地标 / 大地图 / 出生点 */
+var dens = [];                    /* 运行时狼巢状态 {x,y,threatened,coolUntil} */
+var beastTimerDensOnly = 0;
+var discovered = {};              /* 地标首访标记 id -> true (T142) */
+var landmarkCheckCool = 0;
+var mapOpen = false;              /* T144 M 键大地图 */
+var bigMapCanvas = null, bigMapSize = 0;
+var spawnKindUsed = 'near';       /* T145 */
+
 /* ---------------- DOM 引用 ---------------- */
 var $ = function (id) { return document.getElementById(id); };
 var elCats = $('resCats'), elFood = $('resFood'), elBandage = $('resBandage');
@@ -675,7 +684,8 @@ SpawnerSys.attach({
   rng: function () { return WR.App ? WR.App.rng.next() : Math.random(); },
   makeUnit: makeUnit,
   weapons: WEAPONS,
-  armors: ARMORS
+  armors: ARMORS,
+  zones: (WR.Enemies && WR.Enemies.ZONES) || null   /* T141: 难度梯度数据化 */
 });
 function spawnerCtx(minPlayerDist) {
   var hub = towns[0];
@@ -685,6 +695,20 @@ function spawnerCtx(minPlayerDist) {
     playerX: c.x, playerY: c.y,
     minPlayerDist: minPlayerDist,
     worldW: WORLD.w, worldH: WORLD.h,
+    ringMin: 900, ringMax: 3600,   /* T141: 大世界出生环带 */
+    farFromTowns: farFromTowns,
+    units: units
+  };
+}
+/* T140: 狼巢定向刷狼——以狼巢为圆心的小环带 */
+function spawnerCtxAt(cx0, cy0, minPlayerDist, ringMin, ringMax) {
+  var c = squadCentroid();
+  return {
+    hubX: cx0, hubY: cy0,
+    playerX: c.x, playerY: c.y,
+    minPlayerDist: minPlayerDist,
+    worldW: WORLD.w, worldH: WORLD.h,
+    ringMin: ringMin, ringMax: ringMax,
     farFromTowns: farFromTowns,
     units: units
   };
@@ -1636,6 +1660,10 @@ window.addEventListener('keydown', function (e) {
       elHelp.classList.toggle('hidden', !helpOpen);
       break;
     case 'KeyM':
+      /* T144: 大地图（原静音功能移至 KeyU） */
+      toggleBigMap();
+      break;
+    case 'KeyU':
       muted = !muted;
       log(muted ? '已静音' : '声音开启', 'sys');
       break;
@@ -1643,7 +1671,8 @@ window.addEventListener('keydown', function (e) {
       toggle3D();
       break;
     case 'Escape':
-      if (buildMode > 0) { buildMode = 0; log('退出建造模式', 'sys'); }
+      if (mapOpen) mapOpen = false;
+      else if (buildMode > 0) { buildMode = 0; log('退出建造模式', 'sys'); }
       else if (shopOpen) closeShop();
       else if (helpOpen) { helpOpen = false; elHelp.classList.add('hidden'); }
       break;
@@ -1670,15 +1699,65 @@ $('shopClose').addEventListener('click', function () {
 });
 $('restartBtn').addEventListener('click', function () { location.reload(); });
 
-function startGame() {
+/* T145: 出生点三选一（近镇/远镇/流浪者起点） */
+function heroUnit() {
+  for (var i = 0; i < units.length; i++) {
+    if (units[i].faction === 'player') return units[i];
+  }
+  return null;
+}
+function relocateHero(kind) {
+  var h = heroUnit();
+  if (!h || !terrain || !terrain.roads.length) return;
+  spawnKindUsed = kind;
+  var road = terrain.roads[0].pts;
+  var spot = { x: h.x, y: h.y };
+  if (kind === 'near') {
+    spot = { x: towns[0].x + 430, y: towns[0].y - 120 };
+  } else if (kind === 'far') {
+    spot = { x: towns[1].x - 430, y: towns[1].y + 140 };
+  } else if (kind === 'wander') {
+    var mid = road[Math.floor(road.length / 2)];
+    spot = { x: mid.x + 220, y: mid.y + 160 };
+    /* 保证不在城镇圈内 */
+    if (!terrain.farFromTowns(spot.x, spot.y, 380)) spot = { x: mid.x + 420, y: mid.y + 300 };
+  }
+  h.x = spot.x; h.y = spot.y;
+  h.homePoint = { x: spot.x, y: spot.y };
+  selection = [h];
+  cam.x = h.x; cam.y = h.y;
+  clampCam();
+}
+
+function startGame(kind) {
   if (started) return;
   initAudio();
   started = true;
   elStart.classList.add('hidden');
+  if (kind && kind !== 'near') relocateHero(kind);
   log('欢迎来到荒原。这里没有任务——只有生存。', 'sys');
   log('提示：左键选择，右键移动/攻击。跟着下方提示操作即可上手。', 'sys');
 }
-elStart.addEventListener('click', startGame);
+elStart.addEventListener('click', function () { startGame('near'); });
+/* 出生点按钮（阻止冒泡到"点击任意处开始"） */
+(function bindSpawnChoices() {
+  function bind() {
+    var box = document.getElementById('spawnChoices');
+    if (!box || !box.querySelectorAll) return;
+    var btns = box.querySelectorAll('[data-spawn]');
+    for (var i = 0; i < btns.length; i++) {
+      (function (b) {
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          startGame(b.getAttribute('data-spawn'));
+        });
+      })(btns[i]);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind);
+  } else bind();
+})();
 
 /* 运行时报错可见化：任何脚本错误都会显示在屏幕顶部 */
 window.onerror = function (msg, src, line) {
@@ -1743,7 +1822,7 @@ function updateCamera(dt) {
 
 /* ---------------- 主更新 ---------------- */
 function pausedWorld() {
-  return !started || helpOpen || shopOpen || gameOver || sleeping;
+  return !started || helpOpen || shopOpen || gameOver || sleeping || mapOpen;
 }
 
 function brightness() { return 0.5 - 0.5 * Math.cos(tod * TAU); }
@@ -1784,7 +1863,7 @@ function update(dt) {
     if (hostiles < 14) spawnGroup();
   }
 
-  // 狼群生成
+  // 狼群生成（T140: 优先狼巢定向刷新）
   beastTimer -= dt;
   if (beastTimer <= 0) {
     beastTimer = rand(20, 32);
@@ -1792,8 +1871,10 @@ function update(dt) {
     for (var b = 0; b < units.length; b++) {
       if (units[b].faction === 'beast' && units[b].state !== 'dead') beasts++;
     }
-    if (beasts < 7) spawnBeastPack();
+    if (beasts < 7) spawnBeastPackAtDen() || spawnBeastPack();
   }
+  updateLandmarks(dt);
+  updateDenRewards(dt);
 
   for (var u = 0; u < units.length; u++) updateUnit(units[u], dt);
   separation(dt);
@@ -2007,6 +2088,188 @@ function recordBanditAnchors(beforeLen) {
       if (banditAnchors.length > 30) banditAnchors.shift();
     }
   }
+}
+
+/* ---------------- T140: 狼巢定向刷新 + 清剿悬赏 ---------------- */
+function initDens() {
+  dens = [];
+  if (!terrain) return;
+  for (var i = 0; i < terrain.wolfDens.length; i++) {
+    var d = terrain.wolfDens[i];
+    dens.push({ x: d.x, y: d.y, r: d.r, threatened: false, coolUntil: 0 });
+  }
+}
+function beastsNear(x, y, rad) {
+  for (var i = 0; i < units.length; i++) {
+    var u = units[i];
+    if (u.faction !== 'beast' || u.state === 'dead') continue;
+    if (dist(u, { x: x, y: y }) < rad) return true;
+  }
+  return false;
+}
+function spawnBeastPackAtDen() {
+  /* 挑一个没野兽且过了冷却的巢；以巢为中心定向生成 */
+  var cand = null;
+  for (var i = 0; i < dens.length; i++) {
+    var dn = dens[i];
+    if (gameTime < dn.coolUntil) continue;
+    if (beastsNear(dn.x, dn.y, 340)) continue;
+    cand = dn; break;
+  }
+  if (!cand) return 0;
+  var before = units.length;
+  var n = SpawnerSys.spawnBeastPack(spawnerCtxAt(cand.x, cand.y, 120, 60, 240));
+  if (n > 0 && started) sfx('howl');
+  cand.threatened = true;
+  recordBanditAnchors(before);
+  return n;
+}
+var denRewardCool = 0;
+function updateDenRewards(dt) {
+  /* 节流 2s：清剿判定——曾有兽、现在没了 → 悬赏兑现 */
+  denRewardCool -= dt;
+  if (denRewardCool > 0) return;
+  denRewardCool = 2;
+  for (var i = 0; i < dens.length; i++) {
+    var dn = dens[i];
+    if (!dn.threatened) continue;
+    if (beastsNear(dn.x, dn.y, 340)) continue;
+    dn.threatened = false;
+    dn.coolUntil = gameTime + rand(70, 120);
+    res.cats += 45;
+    res.rep[0] += 2;
+    log('附近城镇的悬赏兑现了：狼巢已清剿（+45 猫，枢纽镇声望 +2）', 'gold');
+    addText(dn.x, dn.y - 30, '赏金 +45', '#ffd97a');
+    sfx('coin');
+  }
+}
+
+/* ---------------- T142: 地标首访系统 ---------------- */
+function landmarkList() {
+  if (!terrain) return [];
+  var out = [];
+  for (var i = 0; i < towns.length; i++) out.push({ id: 'town' + i, name: towns[i].name, x: towns[i].x, y: towns[i].y, r: towns[i].r });
+  for (var m = 0; m < terrain.merchantCamps.length; m++) out.push({ id: 'camp' + m, name: '荒原游商营地', x: terrain.merchantCamps[m].x, y: terrain.merchantCamps[m].y, r: terrain.merchantCamps[m].r });
+  for (var t = 0; t < terrain.towers.length; t++) out.push({ id: 'tower' + t, name: '废墟塔楼', x: terrain.towers[t].x, y: terrain.towers[t].y, r: terrain.towers[t].r });
+  for (var d = 0; d < terrain.wolfDens.length; d++) out.push({ id: 'den' + d, name: '狼巢', x: terrain.wolfDens[d].x, y: terrain.wolfDens[d].y, r: terrain.wolfDens[d].r });
+  return out;
+}
+function updateLandmarks(dt) {
+  landmarkCheckCool -= dt;
+  if (landmarkCheckCool > 0) return;
+  landmarkCheckCool = 0.5;
+  var cen = squadCentroid();
+  if (!cen) return;
+  var marks = landmarkList();
+  for (var i = 0; i < marks.length; i++) {
+    var mk = marks[i];
+    if (discovered[mk.id]) continue;
+    if (dist(cen, mk) < mk.r + 160) {
+      discovered[mk.id] = true;
+      log('你发现了「' + mk.name + '」', 'gold');
+      addText(cen.x, cen.y - 46, '发现 ' + mk.name, '#ffd97a');
+      addRing(mk.x, mk.y);
+      sfx('lvl');
+    }
+  }
+}
+
+/* ---------------- T144: M 键大地图 ---------------- */
+function toggleBigMap() {
+  mapOpen = !mapOpen;
+  sfx('ui');
+}
+function bigMapBiomeLayer(sizePx) {
+  /* 群系底图缓存（按尺寸缓存一份） */
+  if (bigMapCanvas && bigMapSize === sizePx) return bigMapCanvas;
+  var c = document.createElement('canvas');
+  c.width = sizePx; c.height = sizePx;
+  var g = c.getContext('2d');
+  if (terrain) {
+    var N = 96, cs = sizePx / N;
+    for (var iy = 0; iy < N; iy++) {
+      for (var ix = 0; ix < N; ix++) {
+        var b = terrain.biomeAt((ix + 0.5) / N * WORLD.w, (iy + 0.5) / N * WORLD.h);
+        g.fillStyle = terrain.palettes[b].base;
+        g.fillRect(ix * cs, iy * cs, cs + 1, cs + 1);
+      }
+    }
+    /* 道路 */
+    g.strokeStyle = 'rgba(90,70,40,.8)';
+    g.lineWidth = Math.max(2, sizePx / 220);
+    for (var r = 0; r < terrain.roads.length; r++) {
+      var pts = terrain.roads[r].pts;
+      g.beginPath();
+      g.moveTo(pts[0].x / WORLD.w * sizePx, pts[0].y / WORLD.h * sizePx);
+      for (var p = 1; p < pts.length; p++) g.lineTo(pts[p].x / WORLD.w * sizePx, pts[p].y / WORLD.h * sizePx);
+      g.stroke();
+    }
+  } else {
+    g.fillStyle = '#1b150c';
+    g.fillRect(0, 0, sizePx, sizePx);
+  }
+  bigMapCanvas = c;
+  bigMapSize = sizePx;
+  return c;
+}
+function drawBigMap() {
+  if (!mapOpen) return;
+  ctx.fillStyle = 'rgba(6,4,2,.78)';
+  ctx.fillRect(0, 0, W, H);
+  var size = Math.min(W, H) - 90;
+  var ox = (W - size) / 2, oy = (H - size) / 2;
+  ctx.drawImage(bigMapBiomeLayer(Math.floor(size)), ox, oy);
+  var k = size / WORLD.w;
+  var mark = function (x, y, col, r2) {
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(ox + x * k, oy + y * k, r2 || 4, 0, TAU); ctx.fill();
+  };
+  /* 已发现地标才显示（未发现的不画）——Kenshi 式探索感 */
+  var marks = landmarkList();
+  for (var i = 0; i < marks.length; i++) {
+    var mk = marks[i];
+    if (!discovered[mk.id]) continue;
+    var col = mk.id.indexOf('town') === 0 ? '#ffd97a'
+      : mk.id.indexOf('camp') === 0 ? '#ffffff'
+      : mk.id.indexOf('tower') === 0 ? '#a03428' : '#b06ad0';
+    mark(mk.x, mk.y, col, 5);
+    ctx.font = '12px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#e8dcc4';
+    ctx.fillText(mk.name, ox + mk.x * k, oy + mk.y * k - 9);
+  }
+  /* 小废墟点（发现过的区域不细分，统一灰点） */
+  if (terrain) {
+    ctx.fillStyle = 'rgba(150,110,80,.75)';
+    for (var ri = 0; ri < terrain.ruins.length; ri++) {
+      if (terrain.ruins[ri].type === 'tower') continue;
+      ctx.fillRect(ox + terrain.ruins[ri].x * k - 1.5, oy + terrain.ruins[ri].y * k - 1.5, 3, 3);
+    }
+  }
+  /* 玩家位置 */
+  var cen = squadCentroid();
+  if (cen) {
+    mark(cen.x, cen.y, '#7fe06a', 5);
+    ctx.strokeStyle = 'rgba(127,224,106,.7)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(ox + cen.x * k, oy + cen.y * k, 9, 0, TAU); ctx.stroke();
+  }
+  /* 情报标记 */
+  if (intelPing && gameTime < intelPing.until) {
+    ctx.strokeStyle = 'rgba(255,70,50,.95)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(ox + intelPing.x * k, oy + intelPing.y * k, 10 + Math.sin(gameTime * 6) * 3, 0, TAU);
+    ctx.stroke();
+  }
+  /* 标题与图例 */
+  ctx.font = 'bold 18px "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#f5e6bd';
+  ctx.fillText('尘 陆 大 地 图', W / 2, oy - 26);
+  ctx.font = '12px "Microsoft YaHei", sans-serif';
+  ctx.fillStyle = '#a4977c';
+  ctx.fillText('金=城镇 · 白=游商 · 红=塔楼 · 紫=狼巢 · 绿点=小队 · 红圈=匪情　（M / Esc 关闭）', W / 2, H - 28);
 }
 
 function checkGameOver() {
@@ -3357,6 +3620,11 @@ function drawMinimap() {
     for (var mc = 0; mc < terrain.merchantCamps.length; mc++) {
       mmCtx.fillRect(terrain.merchantCamps[mc].x * k - 1.5, terrain.merchantCamps[mc].y * k - 1.5, 3, 3);
     }
+    /* 狼巢 */
+    mmCtx.fillStyle = '#b06ad0';
+    for (var wd = 0; wd < terrain.wolfDens.length; wd++) {
+      mmCtx.fillRect(terrain.wolfDens[wd].x * k - 1.5, terrain.wolfDens[wd].y * k - 1.5, 3, 3);
+    }
   }
   /* T137 情报标记（90s 内脉动红圈） */
   if (intelPing && gameTime < intelPing.until) {
@@ -3476,6 +3744,7 @@ function render() {
   drawBoxSelect();
   drawGhostPreview();
   drawMinimap();
+  drawBigMap();
   refreshTooltip();
 }
 
@@ -3517,6 +3786,7 @@ function init() {
   spawnGuards();
   spawnMerchants();       /* T132 游商 */
   spawnTowerGarrisons();  /* T133 塔楼守匪 */
+  initDens();             /* T140 狼巢 */
 
   for (var i = 0; i < 6; i++) spawnGroup();
   for (var b = 0; b < 3; b++) spawnBeastPack();
@@ -3615,9 +3885,15 @@ window.__ronin = {
   scavengeNearest: function () { return tryScavenge(); },
   caravanStats: function () { return { spawned: caravansSpawned, active: !!caravan }; },
   intelPingInfo: function () { return intelPing && gameTime < intelPing.until ? intelPing : null; },
+  discoveredInfo: function () {
+    var marks = landmarkList(), n = 0;
+    for (var i = 0; i < marks.length; i++) if (discovered[marks[i].id]) n++;
+    return { count: n, total: marks.length };
+  },
+  spawnKindInfo: function () { return spawnKindUsed; },
   gates: function () {
     return { started: started, gameOver: gameOver, helpOpen: helpOpen,
-             shopOpen: shopOpen, sleeping: sleeping, buildMode: buildMode };
+             shopOpen: shopOpen, sleeping: sleeping, buildMode: buildMode, mapOpen: mapOpen };
   }
 };
 

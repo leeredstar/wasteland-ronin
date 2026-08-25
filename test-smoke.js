@@ -283,6 +283,11 @@ try {
   if (!(R.caravanStats().spawned >= 1)) throw new Error('caravan never spawned');
   if (typeof R.intelPingInfo() !== 'object' && R.intelPingInfo() !== null) throw new Error('intelPingInfo bad');
   console.log('caravan:', JSON.stringify(R.caravanStats()));
+  /* ---- T140-T145 断言：狼巢 / 地标发现 / 大地图钩子 ---- */
+  if (!(tinfo.wolfDens >= 3)) throw new Error('expected >=3 wolf dens, got ' + tinfo.wolfDens);
+  const disc = R.discoveredInfo();
+  if (!(disc.count >= 1)) throw new Error('no landmarks discovered (landmark system broken)');
+  console.log('discovered:', JSON.stringify(disc), '| spawnKind:', R.spawnKindInfo());
   console.log('SMOKE PASS');
 } catch (err) {
   console.error('SMOKE FAIL:', (err && err.stack) || err);

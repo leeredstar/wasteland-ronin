@@ -14,9 +14,17 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  /* T147: 动态 cell 尺寸——按世界规模自适应，保证平均每格实体数稳定 */
+  function dynamicCellSize(worldSize) {
+    var m = Math.max((worldSize && worldSize.w) || 4000, (worldSize && worldSize.h) || 4000);
+    return clamp(Math.round(m / 80), 60, 200); /* 4000→50→60 下限；8000→100；16000→200 上限 */
+  }
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+
   function World(opts) {
     opts = opts || {};
-    this.cellSize = opts.cellSize || 100;
+    this.worldSize = opts.worldSize || { w: 4000, h: 4000 };
+    this.cellSize = opts.cellSize || dynamicCellSize(this.worldSize);
     this.entities = new Map();   // id -> entity（要求实体有数字 x,y）
     this._grid = new Map();      // "cx,cy" -> Array<entity>
     this._nextId = 1;
@@ -133,6 +141,8 @@
     this._grid.clear();
     this._nextId = 1;
   };
+
+  World.__dynamicCellSize = dynamicCellSize; /* 测试/调试 */
 
   return World;
 });

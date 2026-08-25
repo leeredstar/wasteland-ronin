@@ -18,8 +18,22 @@
 })(typeof self !== 'undefined' ? self : this, function (WR) {
   'use strict';
 
+  /* ---------------- T146: 世界常数集中配置 ---------------- */
+  var CONFIG = {
+    worldW: 8000, worldH: 8000,      /* T125 世界尺寸 */
+    townMinSpacing: 52,              /* 城镇最小间距（格网采样单位） */
+    biomeScale: 2600,                /* T127 区域群系噪声尺度 */
+    biomeJitterScale: 340,           /* 群系边界破碎噪声尺度 */
+    patchScale: 190,                 /* T129 地表斑块噪声尺度 */
+    decorCount: 900,                 /* 装饰物总量 */
+    ruinCount: 12,                   /* 杂物废墟数量 */
+    towerCount: 2,                   /* 废墟塔楼数量（T133） */
+    campCount: 2,                    /* 游商营地数量（T132） */
+    denCount: 3                      /* 狼巢数量（T140） */
+  };
+
   /* ---------------- T125: 世界尺寸与城镇 ---------------- */
-  var WORLD_SIZE = { w: 8000, h: 8000 };
+  var WORLD_SIZE = { w: CONFIG.worldW, h: CONFIG.worldH };
   var TOWNS = [
     { name: '枢纽镇', x: 2200, y: 4200, r: 300 },
     { name: '世界之角', x: 6200, y: 3000, r: 300 }
@@ -85,8 +99,8 @@
     /* ---------- T127: 区域生物群系 ---------- */
     /* 大尺度区域噪声决定 sand/grass/rock；过渡带用中间阈值抖动避免直线边界 */
     function biomeAt(x, y) {
-      var n = fbm(x / 2600, y / 2600, seed ^ 0xB10B1, 3);
-      var jitter = (valueNoise(x / 340, y / 340, seed ^ 0x51) - 0.5) * 0.08; /* 边界破碎 */
+      var n = fbm(x / CONFIG.biomeScale, y / CONFIG.biomeScale, seed ^ 0xB10B1, 3);
+      var jitter = (valueNoise(x / CONFIG.biomeJitterScale, y / CONFIG.biomeJitterScale, seed ^ 0x51) - 0.5) * 0.08; /* 边界破碎 */
       var v = n + jitter;
       if (v < 0.44) return 'sand';
       if (v < 0.58) return 'grass';
@@ -95,7 +109,7 @@
 
     /* T129: 同群系内的地表斑块索引（渲染层用它挑 patch 颜色） */
     function patchIndex(x, y, paletteLen) {
-      var n = fbm(x / 190, y / 190, seed ^ 0xCAFE, 2);
+      var n = fbm(x / CONFIG.patchScale, y / CONFIG.patchScale, seed ^ 0xCAFE, 2);
       var idx = Math.floor(n * paletteLen * 1.999);
       return idx % paletteLen;
     }
@@ -185,7 +199,7 @@
       }
       return out;
     }
-    var decor = genDecor(900);
+    var decor = genDecor(CONFIG.decorCount);
 
     /* ---------- T131/T133: 废墟点位 + 废墟塔楼 ---------- */
     function genRuins(n) {
@@ -210,7 +224,7 @@
       }
       return out;
     }
-    var ruins = genRuins(12);
+    var ruins = genRuins(CONFIG.ruinCount);
 
     /* T133: 废墟塔楼——高风险高回报（守匪由宿主层生成） */
     function genTowers(n) {
@@ -236,7 +250,7 @@
       }
       return out;
     }
-    var towers = genTowers(2);
+    var towers = genTowers(CONFIG.towerCount);
     for (var ti = 0; ti < towers.length; ti++) ruins.push(towers[ti]); /* 统一搜索接口 */
 
     /* T132: 荒原游商营地——沿道路两侧布点（旅途中转站） */
@@ -278,7 +292,31 @@
       }
       return { x: x, y: y };
     }
-    var merchantCamps = genMerchantCamps(2);
+    var merchantCamps = genMerchantCamps(CONFIG.campCount);
+
+    /* T140: 狼巢——荒野兽群周期刷新锚点 */
+    function genWolfDens(n) {
+      n = n || CONFIG.denCount;
+      var out = [];
+      for (var i = 0; out.length < n && i < n * 60; i++) {
+        var gx = hash2(i, 31, seed ^ 0xD301), gy = hash2(i, 32, seed ^ 0xD302);
+        var x = 500 + gx * (WORLD_SIZE.w - 1000);
+        var y = 500 + gy * (WORLD_SIZE.h - 1000);
+        if (!farFromTowns(x, y, 950)) continue;
+        if (roadDist(x, y) < 320) continue;
+        if (ruins.some(function (r) { return Math.hypot(r.x - x, r.y - y) < 800; })) continue;
+        if (merchantCamps.some(function (c) { return Math.hypot(c.x - x, c.y - y) < 900; })) continue;
+        if (out.some(function (r) { return Math.hypot(r.x - x, r.y - y) < 1800; })) continue;
+        out.push({
+          id: 'den' + i,
+          x: Math.round(x), y: Math.round(y),
+          r: 120,
+          coolUntil: 0       /* 清剿后的再刷新冷却（宿主层读写） */
+        });
+      }
+      return out;
+    }
+    var wolfDens = genWolfDens(CONFIG.denCount);
 
     /* 最近的可搜索废墟（range 内）；返回废墟或 null */
     function nearestRuin(x, y, range) {
@@ -330,12 +368,14 @@
       var towerN = 0;
       for (var i = 0; i < ruins.length; i++) if (ruins[i].type === 'tower') towerN++;
       return { biomes: samples, decor: decor.length, ruins: ruins.length - towerN,
-               towers: towerN, merchants: merchantCamps.length, roads: roads.length };
+               towers: towerN, merchants: merchantCamps.length,
+               wolfDens: wolfDens.length, roads: roads.length };
     }
 
     return {
       seed: seed,
       size: WORLD_SIZE,
+      config: CONFIG,
       towns: TOWNS,
       palettes: PALETTES,
       biomeAt: biomeAt,
@@ -345,6 +385,7 @@
       ruins: ruins,
       towers: towers,
       merchantCamps: merchantCamps,
+      wolfDens: wolfDens,
       nearestRuin: nearestRuin,
       scavenge: scavenge,
       farFromTowns: farFromTowns,
@@ -356,6 +397,7 @@
     create: create,
     WORLD_SIZE: WORLD_SIZE,
     TOWNS: TOWNS,
-    PALETTES: PALETTES
+    PALETTES: PALETTES,
+    CONFIG: CONFIG
   };
 });

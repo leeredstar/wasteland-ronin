@@ -36,22 +36,26 @@
 
 ## 遗留宿主（js/game.js）DOM 引用清单
 
-共 **14** 处（迁移至 ui/ 层时清零）：
+共 **18** 处（迁移至 ui/ 层时清零）：
 
 - L70: `document.getElementById` — var canvas = document.getElementById('game');
 - L72: `document.getElementById` — var mmCanvas = document.getElementById('minimap');
 - L74: `document.getElementById` — var bodyCanvas = document.getElementById('bodyCanvas');
-- L145: `document.getElementById` — var $ = function (id) { return document.getElementById(id); };
-- L200: `document.createElement` — var li = document.createElement('li');
-- L987: `document.createElement` — var rowEl = document.createElement('div');
-- L989: `document.createElement` — var left = document.createElement('div');
-- L991: `document.createElement` — var btn = document.createElement('button');
-- L1686: `document.getElementById` — var bar = document.getElementById('errBanner');
-- L1688: `document.createElement` — bar = document.createElement('div');
-- L1691: `document.body` — document.body.appendChild(bar);
-- L2155: `document.createElement` — var c = document.createElement('canvas');
-- L2276: `document.createElement` — var c = document.createElement('canvas');
-- L3108: `document.createElement` — cv = document.createElement('canvas');
+- L154: `document.getElementById` — var $ = function (id) { return document.getElementById(id); };
+- L209: `document.createElement` — var li = document.createElement('li');
+- L1011: `document.createElement` — var rowEl = document.createElement('div');
+- L1013: `document.createElement` — var left = document.createElement('div');
+- L1015: `document.createElement` — var btn = document.createElement('button');
+- L1745: `document.getElementById` — var box = document.getElementById('spawnChoices');
+- L1757: `document.readyState` — if (document.readyState === 'loading') {
+- L1758: `document.addEventListener` — document.addEventListener('DOMContentLoaded', bind);
+- L1765: `document.getElementById` — var bar = document.getElementById('errBanner');
+- L1767: `document.createElement` — bar = document.createElement('div');
+- L1770: `document.body` — document.body.appendChild(bar);
+- L2185: `document.createElement` — var c = document.createElement('canvas');
+- L2418: `document.createElement` — var c = document.createElement('canvas');
+- L2539: `document.createElement` — var c = document.createElement('canvas');
+- L3371: `document.createElement` — cv = document.createElement('canvas');
 
 ## 结论
 

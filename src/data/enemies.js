@@ -64,5 +64,14 @@
     skills: { str: 16, tgh: 15, dodge: 14, melee: 18 }
   };
 
-  return { ENEMIES: ENEMIES, GUARD: GUARD };
+  /* T141: 区域难度梯度（距枢纽镇距离 → 危险层级断点）
+   * 8000×8000 大世界：核心区(<1500)新手友好，中环(<3400)标准，
+   * 外环与边缘纵深(≥3400)高危高回报。 */
+  var ZONES = [
+    { d: 1500, ti: 0 },
+    { d: 3400, ti: 1 },
+    { d: Infinity, ti: 2 }
+  ];
+
+  return { ENEMIES: ENEMIES, GUARD: GUARD, ZONES: ZONES };
 });

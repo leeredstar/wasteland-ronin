@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-25T23:09:19.669Z",
+ "updatedAt": "2026-08-25T23:21:55.786Z",
  "total": 500,
- "done": 139,
+ "done": 147,
  "phases": [
   {
    "id": "M0",
@@ -1212,64 +1212,64 @@
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "狼巢点位：周期刷新狼群，清剿获得声望奖励",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:21:55.426Z"
   },
   {
    "id": "T141",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "区域难度梯度由 enemies 表重新编排",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:21:55.486Z"
   },
   {
    "id": "T142",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "地标系统：首访触发“你发现了XX”日志",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:21:55.540Z"
   },
   {
    "id": "T143",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "小地图按群系着色渲染",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:21:55.588Z"
   },
   {
    "id": "T144",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "M 键大地图：全屏展示已发现地标",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:21:55.636Z"
   },
   {
    "id": "T145",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "新档出生点三选一（近镇/远镇/流浪者起点）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:21:55.686Z"
   },
   {
    "id": "T146",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "世界常数集中 WORLD 配置（尺寸/城距/群系种子）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:21:55.735Z"
   },
   {
    "id": "T147",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "空间哈希适配大地图（动态 cell 尺寸）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T23:21:55.786Z"
   },
   {
    "id": "T148",

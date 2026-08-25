@@ -34,6 +34,7 @@
     weapons: null,
     armors: null,
     tiers: null,     // [{name,hp,melee,dodge,str,tgh,aggro,speed,weapons,loot,faction,armorChance}]
+    zones: null,     // T141: [{d,ti}] 距离→层级断点（数据来自 Enemies.ZONES）
     boss: null,      // {name,faction,hp,speed,aggro,scale,r,weaponKey,armorKey,loot,skills...}
     wolf: null       // {name,faction,hp,speed,aggro,weaponKey,loot,skills...}
   };
@@ -44,15 +45,22 @@
     S.weapons = opts.weapons || S.weapons;
     S.armors = opts.armors || S.armors;
     S.tiers = opts.tiers || S.tiers;
+    S.zones = opts.zones || S.zones;
     S.boss = opts.boss || S.boss;
     S.wolf = opts.wolf || S.wolf;
   }
 
-  /** 距 hub 距离 → tier 索引 */
+  /** 距 hub 距离 → tier 索引（T141: 断点由 zones 数据驱动） */
   function tierForDistance(dh) {
-    if (dh > 1800 && S.rng() < 0.45) return 2;
-    if (dh > 950) return 1;
-    return 0;
+    var zones = S.zones || [{ d: 950, ti: 1 }, { d: 1800, ti: 2 }];
+    var ti = 0;
+    for (var i = 0; i < zones.length; i++) {
+      if (dh >= zones[i].d) ti = zones[i].ti != null ? zones[i].ti : (i + 1);
+    }
+    /* 最高层保持旧的概率混合手感：远地带概率直取 2 级 */
+    var topTi = zones.length ? (zones[zones.length - 1].ti != null ? zones[zones.length - 1].ti : 2) : 2;
+    if (ti === topTi && dh > 1800 && S.rng() < 0.45) return 2;
+    return ti;
   }
 
   /**
@@ -60,9 +68,12 @@
    *   minPlayerDist, worldW, worldH, farFromTowns(x,y,m)}
    */
   function findSpawnPos(ctx) {
+    /* T141: 出生环带参数化（大世界适配；狼巢定向生成也复用此口） */
+    var ringMin = ctx.ringMin != null ? ctx.ringMin : 750;
+    var ringMax = ctx.ringMax != null ? ctx.ringMax : Math.max(2100, ringMin + 900);
     for (var tries = 0; tries < 16; tries++) {
       var ang = S.rng() * Math.PI * 2;
-      var dc = 750 + S.rng() * 1350;
+      var dc = ringMin + S.rng() * (ringMax - ringMin);
       var x = clamp(ctx.hubX + Math.cos(ang) * dc, 60, ctx.worldW - 60);
       var y = clamp(ctx.hubY + Math.sin(ang) * dc, 60, ctx.worldH - 60);
       if (!ctx.farFromTowns(x, y, 120)) continue;
