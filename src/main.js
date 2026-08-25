@@ -27,8 +27,9 @@
     App.bus = new WR.EventBus();
     App.time = WR.Time.create({ dayLength: 150, startTod: 0.3 });
     App.camera = WR.Camera.create({
-      x: 1530, y: 1980, zoom: 1.15,
-      world: { w: 4000, h: 4000 },
+      x: 2630, y: 4080, zoom: 1.15,
+      world: { w: (WR.Terrain && WR.Terrain.WORLD_SIZE.w) || 8000,
+               h: (WR.Terrain && WR.Terrain.WORLD_SIZE.h) || 8000 },
       viewportW: root.innerWidth || 1280,
       viewportH: root.innerHeight || 800
     });

@@ -25,6 +25,7 @@ const FILES = [
   'src/systems/Economy.js',
   'src/systems/Build.js',
   'src/world/Spawner.js',
+  'src/world/Terrain.js',
   'js/game.js',
   'src/main.js'
 ];
@@ -266,6 +267,15 @@ try {
       ' time=' + st.time.toFixed(0));
   }
   if (matsBefore !== null && R.resources().mats >= matsBefore) throw new Error('wall was not placed (mats unchanged)');
+  /* ---- M5 地形扩展断言（T125-T131）---- */
+  const tinfo = R.terrainInfo();
+  if (!tinfo) throw new Error('terrain hooks missing (Terrain.js not loaded?)');
+  const biomes = Object.entries(tinfo.biomes).filter(([k, v]) => v > 0);
+  if (biomes.length < 2) throw new Error('biome variety too low: ' + JSON.stringify(tinfo.biomes));
+  if (tinfo.ruins < 6) throw new Error('too few ruins: ' + tinfo.ruins);
+  if (tinfo.roads < 1) throw new Error('no roads generated');
+  if (typeof R.scavengeNearest() !== 'boolean') throw new Error('scavengeNearest did not return bool');
+  console.log('terrain:', JSON.stringify(tinfo));
   console.log('SMOKE PASS');
 } catch (err) {
   console.error('SMOKE FAIL:', (err && err.stack) || err);

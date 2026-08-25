@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-25T01:40:50.504Z",
+ "updatedAt": "2026-08-25T15:06:43.846Z",
  "total": 500,
- "done": 123,
+ "done": 131,
  "phases": [
   {
    "id": "M0",
@@ -732,8 +732,8 @@
    "phase": "M2",
    "phaseName": "生存与部位伤害深化",
    "title": "M2 门禁：Kenshi 式“断肢-义肢-续命”体验闭环确认",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T15:06:43.531Z"
   },
   {
    "id": "T081",
@@ -1092,56 +1092,56 @@
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "世界扩容至 8000×8000（为分块加载做准备）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T15:06:43.584Z"
   },
   {
    "id": "T126",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "地形三层分离：底色层/装饰层/碰撞层",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T15:06:43.629Z"
   },
   {
    "id": "T127",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "生物群系概念：sand/grass/rock 按区域噪声分布",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T15:06:43.673Z"
   },
   {
    "id": "T128",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "群系调色板：各地表区域色板差异",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T15:06:43.716Z"
   },
   {
    "id": "T129",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "噪声斑块地形生成（替换现有平铺 pattern）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T15:06:43.761Z"
   },
   {
    "id": "T130",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "道路网络：连接两镇的路径（纯视觉引导）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T15:06:43.804Z"
   },
   {
    "id": "T131",
    "phase": "M5",
    "phaseName": "世界与地图扩展",
    "title": "废墟点位：E 键搜索杂物堆获得随机资源（带冷却）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-25T15:06:43.846Z"
   },
   {
    "id": "T132",

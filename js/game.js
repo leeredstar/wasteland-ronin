@@ -15,7 +15,11 @@ function dist(a, b) { var dx = a.x - b.x, dy = a.y - b.y; return Math.sqrt(dx * 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 /* ---------------- 基础配置 ---------------- */
-var WORLD = { w: 4000, h: 4000 };
+/* M5/T125: 世界扩容 8000×8000；城镇坐标由 src/world/Terrain.js 数据驱动 */
+var TERRAIN_MOD = (typeof WR !== 'undefined' && WR.Terrain) ? WR.Terrain : null;
+var WORLD = TERRAIN_MOD
+  ? { w: TERRAIN_MOD.WORLD_SIZE.w, h: TERRAIN_MOD.WORLD_SIZE.h }
+  : { w: 8000, h: 8000 };
 var DAY_LEN = 150;
 
 var WEAPONS = {
@@ -54,11 +58,13 @@ function randName() {
 }
 var BEAST_NAMES = ['灰牙', '夜嚎', '快爪', '荒脊', '白斑', '断耳'];
 
-/* ---------------- 城镇 ---------------- */
-var towns = [
-  { name: '枢纽镇', x: 1100, y: 2100, r: 300 },
-  { name: '世界之角', x: 3100, y: 1500, r: 300 }
-];
+/* ---------------- 城镇（T125：随世界扩容重定位，数据源 Terrain.js） ---------------- */
+var towns = TERRAIN_MOD
+  ? TERRAIN_MOD.TOWNS.map(function (t) { return { name: t.name, x: t.x, y: t.y, r: t.r }; })
+  : [
+    { name: '枢纽镇', x: 2200, y: 4200, r: 300 },
+    { name: '世界之角', x: 6200, y: 3000, r: 300 }
+  ];
 
 /* ---------------- 全局状态 ---------------- */
 var canvas = document.getElementById('game');
@@ -118,6 +124,12 @@ var tutorial = 0;
 var lastShakeX = 0, lastShakeY = 0;
 var flameAcc = 0;
 var townAngryUntil = 0;
+
+/* M5 世界扩展状态（T126-T131） */
+var terrain = null;               /* Terrain.js 实例：群系/装饰/道路/废墟 */
+var terrainChunks = new Map();    /* T129 底色分块缓存 key -> canvas */
+var terrainPaintCount = 0;        /* 本帧已绘制的块数（预算控制） */
+var ruinHintCool = 0;             /* 废墟提示节流 */
 
 /* ---------------- DOM 引用 ---------------- */
 var $ = function (id) { return document.getElementById(id); };
@@ -1001,8 +1013,40 @@ function equipArmorMsg(u, what) {
 function interact() {
   if (shopOpen) { closeShop(); return; }
   var town = nearestTownOfSelection(175);
-  if (town) openShop(town);
-  else log('附近没有城镇（走进城镇的围墙内按 E）', 'sys');
+  if (town) { openShop(town); return; }
+  /* M5/T131: 废墟搜索 */
+  if (tryScavenge()) return;
+  log('附近没有城镇或废墟', 'sys');
+}
+
+/* T131: 搜索最近的可交互废墟（小队任一成员在范围内即可） */
+function tryScavenge() {
+  if (!terrain) return false;
+  for (var i = 0; i < selection.length; i++) {
+    var u = selection[i];
+    if (u.faction !== 'player' || u.state === 'dead' || isDown(u)) continue;
+    var ru = terrain.nearestRuin(u.x, u.y, 95);
+    if (!ru) continue;
+    if (gameTime < ru.coolUntil) {
+      log('这处废墟刚被搜刮过，还没刷新（冷却中）', 'sys');
+      addText(u.x, u.y - 34, '冷却中…', '#b8a888');
+      return true;
+    }
+    var found = terrain.scavenge(ru, gameTime, function () { return WR.App.rng.next(); });
+    if (!found) return true;
+    var parts = [];
+    if (found.cats) { res.cats += found.cats; parts.push(found.cats + ' 猫'); }
+    ['food', 'bandage', 'mats', 'kits'].forEach(function (k) {
+      if (found[k]) { res[k] += found[k]; parts.push(k + ' ×' + found[k]); }
+    });
+    log(u.name + ' 在废墟里翻到了: ' + (parts.join('、') || '灰尘'), 'good');
+    addText(ru.x, ru.y - 40, '+' + parts.join(' '), '#ffd97a');
+    addRing(ru.x, ru.y);
+    sfx('coin');
+    tutStep(1);
+    return true;
+  }
+  return false;
 }
 
 /* ---------------- v0.3 营地 / 睡眠 / 俘虏 / 建造 ---------------- */
@@ -1629,6 +1673,13 @@ function update(dt) {
       townHintCool[tn.name] = gameTime;
       log('进入 ' + tn.name + ' —— 按 E 打开商店 / 招募', 'sys');
     }
+  } else if (terrain && gameTime > ruinHintCool) {
+    /* M5/T131: 靠近废墟提示 */
+    var cen = squadCentroid();
+    if (cen && terrain.nearestRuin(cen.x, cen.y, 130)) {
+      ruinHintCool = gameTime + 10;
+      log('发现废墟——靠近后按 E 搜索物资', 'sys');
+    }
   }
 
   updateCamera(dt);
@@ -1802,6 +1853,8 @@ function makeSandPattern() {
 }
 
 function genDecor() {
+  /* M5/T126: 装饰层由 Terrain.js 确定性生成（按群系分布，避开城镇/道路） */
+  if (terrain) { decor = terrain.decor.slice(); return; }
   decor = [];
   for (var i = 0; i < 320; i++) {
     var x = rand(40, WORLD.w - 40), y = rand(40, WORLD.h - 40);
@@ -1841,6 +1894,10 @@ function buildObstacles() {
     }
     obstacles.push({ x: towns[t].x, y: towns[t].y, r: 16 });
   }
+  /* M5/T126: 碰撞层——大石（decor.solid）也阻挡移动 */
+  for (var d = 0; d < decor.length; d++) {
+    if (decor[d].solid) obstacles.push({ x: decor[d].x, y: decor[d].y, r: 13 * decor[d].s });
+  }
 }
 
 function initMotes() {
@@ -1860,10 +1917,104 @@ function inView(x, y, m) {
          y > viewRect.y - m && y < viewRect.y + viewRect.h + m;
 }
 
+/* ============ M5/T126-T129: 三层地形渲染 ============
+ * 底色层：512px 分块缓存画布，群系底色 + 噪声斑块 + 碎斑
+ * 装饰层/碰撞层：genDecor/buildObstacles（见上）
+ * 每帧最多同步绘制 2 块，未就绪块先以群系基色填充 */
+var TCHUNK = 512;
+
+function terrainChunkRng(cx, cy) {
+  /* 块级确定性随机（mulberry32），保证同种子下地表稳定 */
+  var t = (Math.imul(cx, 73856093) ^ Math.imul(cy, 19349663) ^
+    ((terrain ? terrain.seed : 1) | 0)) >>> 0;
+  return function () {
+    t += 0x6D2B79F5;
+    var r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function paintTerrainChunk(cx, cy) {
+  var c = document.createElement('canvas');
+  c.width = TCHUNK; c.height = TCHUNK;
+  var g = c.getContext('2d');
+  var x0 = cx * TCHUNK, y0 = cy * TCHUNK;
+  var CELL = 64, N = TCHUNK / CELL;
+  var rng = terrainChunkRng(cx, cy);
+
+  /* 1) 群系基色网格采样 */
+  for (var iy = 0; iy < N; iy++) {
+    for (var ix = 0; ix < N; ix++) {
+      var wx = x0 + ix * CELL + CELL / 2, wy = y0 + iy * CELL + CELL / 2;
+      var b = terrain.biomeAt(wx, wy);
+      var pal = terrain.palettes[b];
+      var pi = terrain.patchIndex(wx, wy, pal.patches.length);
+      g.fillStyle = pal.patches[pi] || pal.base;
+      g.fillRect(ix * CELL, iy * CELL, CELL, CELL);
+    }
+  }
+  /* 2) 噪声斑块：跨格椭圆，打破网格感 */
+  for (var p = 0; p < 26; p++) {
+    var bx = x0 + rng() * TCHUNK, by = y0 + rng() * TCHUNK;
+    var pb = terrain.biomeAt(bx, by);
+    var ppal = terrain.palettes[pb];
+    g.globalAlpha = 0.28 + rng() * 0.18;
+    g.fillStyle = ppal.patches[Math.floor(rng() * ppal.patches.length)];
+    g.beginPath();
+    g.ellipse((bx - x0), (by - y0), 34 + rng() * 84, 20 + rng() * 52, rng() * Math.PI, 0, TAU);
+    g.fill();
+  }
+  /* 3) 碎斑颗粒 */
+  g.globalAlpha = 1;
+  for (var s = 0; s < 120; s++) {
+    var sb = terrain.palettes[terrain.biomeAt(x0 + rng() * TCHUNK, y0 + rng() * TCHUNK)];
+    g.fillStyle = sb.speck[rng() < 0.5 ? 0 : 1];
+    g.fillRect(rng() * TCHUNK, rng() * TCHUNK, 2, 2);
+  }
+  return c;
+}
+
+function getTerrainChunk(cx, cy) {
+  var key = cx + ',' + cy;
+  var c = terrainChunks.get(key);
+  if (c) return c;
+  if (terrainPaintCount >= 2) return null; /* 预算耗尽，本帧先用兜底色 */
+  terrainPaintCount++;
+  c = paintTerrainChunk(cx, cy);
+  terrainChunks.set(key, c);
+  if (terrainChunks.size > 48) {
+    var first = terrainChunks.keys().next().value;
+    terrainChunks.delete(first);
+  }
+  return c;
+}
+
 function drawTerrain() {
-  ctx.fillStyle = sandPattern || '#c8ab74';
-  ctx.fillRect(viewRect.x, viewRect.y, viewRect.w, viewRect.h);
-  // 世界边界之外更暗（evenodd 只画世界矩形以外的区域）
+  terrainPaintCount = 0;
+  if (!terrain) { /* 无 Terrain 模块时退回旧平铺图案 */ 
+    ctx.fillStyle = sandPattern || '#c8ab74';
+    ctx.fillRect(viewRect.x, viewRect.y, viewRect.w, viewRect.h);
+  } else {
+    var x0 = Math.floor(viewRect.x / TCHUNK), x1 = Math.floor((viewRect.x + viewRect.w) / TCHUNK);
+    var y0 = Math.floor(viewRect.y / TCHUNK), y1 = Math.floor((viewRect.y + viewRect.h) / TCHUNK);
+    for (var cy = y0; cy <= y1; cy++) {
+      for (var cx = x0; cx <= x1; cx++) {
+        var wx = cx * TCHUNK, wy = cy * TCHUNK;
+        if (wx > WORLD.w || wy > WORLD.h || wx + TCHUNK < 0 || wy + TCHUNK < 0) continue;
+        var c = getTerrainChunk(cx, cy);
+        if (c) ctx.drawImage(c, wx, wy);
+        else {
+          /* 兜底：该块群系基色 */
+          var bmid = terrain.biomeAt(wx + TCHUNK / 2, wy + TCHUNK / 2);
+          ctx.fillStyle = terrain.palettes[bmid].base;
+          ctx.fillRect(Math.max(wx, 0), Math.max(wy, 0),
+            Math.min(TCHUNK, WORLD.w - wx), Math.min(TCHUNK, WORLD.h - wy));
+        }
+      }
+    }
+  }
+  /* 世界边界之外更暗（evenodd 只画世界矩形以外的区域） */
   var m = 400;
   ctx.save();
   ctx.beginPath();
@@ -1876,6 +2027,77 @@ function drawTerrain() {
   ctx.strokeStyle = 'rgba(60,45,25,.8)';
   ctx.lineWidth = 4;
   ctx.strokeRect(0, 0, WORLD.w, WORLD.h);
+}
+
+/* T130: 道路网络（纯视觉引导；未来商队寻路可复用 pts） */
+function drawRoads() {
+  if (!terrain || !terrain.roads.length) return;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (var r = 0; r < terrain.roads.length; r++) {
+    var pts = terrain.roads[r].pts;
+    /* 视口剔除：任一点在视野内即绘制 */
+    var vis = false;
+    for (var i = 0; i < pts.length; i++) {
+      if (inView(pts[i].x, pts[i].y, 300)) { vis = true; break; }
+    }
+    if (!vis) continue;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (var j = 1; j < pts.length; j++) ctx.lineTo(pts[j].x, pts[j].y);
+    ctx.strokeStyle = 'rgba(70,55,30,.30)';
+    ctx.lineWidth = 46;
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(152,127,82,.40)';
+    ctx.lineWidth = 32;
+    ctx.stroke();
+    ctx.setLineDash([26, 22]);
+    ctx.strokeStyle = 'rgba(210,185,130,.25)';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+
+/* T131: 废墟点位渲染（残墙 + 板条箱；冷却中变暗淡） */
+function drawRuins() {
+  if (!terrain) return;
+  for (var i = 0; i < terrain.ruins.length; i++) {
+    var ru = terrain.ruins[i];
+    if (!inView(ru.x, ru.y, 160)) continue;
+    var cooling = gameTime < ru.coolUntil;
+    var rng = terrainChunkRng(ru.x | 0, ru.y | 0);
+    ctx.save();
+    ctx.translate(ru.x, ru.y);
+    ctx.globalAlpha = cooling ? 0.45 : 0.95;
+    /* 残墙碎片 */
+    for (var w = 0; w < 5; w++) {
+      var a = rng() * TAU, rr = 24 + rng() * 46;
+      ctx.save();
+      ctx.rotate(a);
+      ctx.fillStyle = '#8d857a';
+      ctx.fillRect(rr, -6 - rng() * 8, 14 + rng() * 12, 12 + rng() * 10);
+      ctx.fillStyle = 'rgba(0,0,0,.25)';
+      ctx.fillRect(rr, 4, 14 + rng() * 12, 4);
+      ctx.restore();
+    }
+    /* 板条箱 */
+    ctx.fillStyle = '#7a5f38';
+    ctx.fillRect(-10, -8, 22, 18);
+    ctx.strokeStyle = '#5b4426';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-10, -8, 22, 18);
+    ctx.beginPath(); ctx.moveTo(-10, -8); ctx.lineTo(12, 10); ctx.stroke();
+    /* 可搜索时的微光标记 */
+    if (!cooling) {
+      ctx.globalAlpha = 0.55 + 0.35 * Math.sin(gameTime * 3);
+      ctx.fillStyle = '#ffd97a';
+      ctx.beginPath(); ctx.arc(0, -26, 3.2, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
 }
 
 function drawDecor() {
@@ -2624,8 +2846,37 @@ function drawMinimap() {
   var S = 156;
   var k = S / WORLD.w;
   mmCtx.clearRect(0, 0, S, S);
-  mmCtx.fillStyle = '#1b150c';
-  mmCtx.fillRect(0, 0, S, S);
+  /* M5: 底色按群系粗采样（16×16 网格） */
+  if (terrain) {
+    var GN = 16, gc = S / GN;
+    for (var gy = 0; gy < GN; gy++) {
+      for (var gx = 0; gx < GN; gx++) {
+        var b = terrain.biomeAt((gx + 0.5) / GN * WORLD.w, (gy + 0.5) / GN * WORLD.h);
+        mmCtx.fillStyle = terrain.palettes[b].base;
+        mmCtx.fillRect(gx * gc, gy * gc, gc + 1, gc + 1);
+      }
+    }
+  } else {
+    mmCtx.fillStyle = '#1b150c';
+    mmCtx.fillRect(0, 0, S, S);
+  }
+  /* 道路 */
+  if (terrain) {
+    mmCtx.strokeStyle = 'rgba(210,185,130,.5)';
+    mmCtx.lineWidth = 1.5;
+    for (var rd = 0; rd < terrain.roads.length; rd++) {
+      var pts = terrain.roads[rd].pts;
+      mmCtx.beginPath();
+      mmCtx.moveTo(pts[0].x * k, pts[0].y * k);
+      for (var pi = 1; pi < pts.length; pi++) mmCtx.lineTo(pts[pi].x * k, pts[pi].y * k);
+      mmCtx.stroke();
+    }
+    /* 废墟 */
+    mmCtx.fillStyle = '#b06a4a';
+    for (var ri = 0; ri < terrain.ruins.length; ri++) {
+      mmCtx.fillRect(terrain.ruins[ri].x * k - 1.5, terrain.ruins[ri].y * k - 1.5, 3, 3);
+    }
+  }
   mmCtx.fillStyle = '#ffd97a';
   for (var t = 0; t < towns.length; t++) {
     mmCtx.fillRect(towns[t].x * k - 3, towns[t].y * k - 3, 6, 6);
@@ -2714,8 +2965,10 @@ function render() {
   viewRect.h = H / zoom;
 
   drawTerrain();
+  drawRoads();
   drawDecor();
   drawTowns();
+  drawRuins();
   drawStructures();
   drawDecals();
   drawMotes();
@@ -2762,6 +3015,9 @@ function frame(now) {
 function init() {
   resize();
   sandPattern = makeSandPattern();
+  /* M5: 世界地形（群系/装饰/道路/废墟）——种子与 App.rng 同源 */
+  if (TERRAIN_MOD) terrain = TERRAIN_MOD.create({ seed: (WR.App && WR.App.seed) || 20260825 });
+  terrainChunks.clear();
   genTownBuildings();
   buildObstacles();
   genDecor();
@@ -2859,6 +3115,10 @@ window.__ronin = {
   selectionList: function () { return selection; },
   isR3D: function () { return R3D_active; },
   getCam: function () { return { x: cam.x, y: cam.y, z: zoom }; },
+  /* M5 地形钩子（测试/调试用） */
+  terrainInfo: function () { return terrain ? terrain.stats() : null; },
+  ruinsList: function () { return terrain ? terrain.ruins : []; },
+  scavengeNearest: function () { return tryScavenge(); },
   gates: function () {
     return { started: started, gameOver: gameOver, helpOpen: helpOpen,
              shopOpen: shopOpen, sleeping: sleeping, buildMode: buildMode };
