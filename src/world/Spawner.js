@@ -127,6 +127,7 @@
         x: pos.x + (S.rng() * 60 - 30), y: pos.y + (S.rng() * 60 - 30),
         maxHp: boss.hp, speed: boss.speed, aggro: boss.aggro,
         scale: boss.scale || 1.18, r: boss.r || 13,
+        isBoss: true,                 /* T169 头目战吼标记 */
         weapon: S.weapons[boss.weaponKey || 'katana'],
         armor: S.armors ? S.armors.chain : null,
         tierName: boss.name || '强盗头目',

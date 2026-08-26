@@ -144,6 +144,10 @@ var dangerLogCool = 0;
 /* T157-T159: 协防统计 / 狼群包抄 / 诱饵 */
 var supportCool = 0;
 var supportCount = 0;
+var guardCallLogCool = 0;   /* T166 */
+var repAssistLogCool = 0;   /* T168 */
+var guardCallCount = 0;
+var repAssistCount = 0;
 var baits = [];                   /* 肉块诱饵 {x,y,t,life} */
 var baitCd = 0;
 var baitThrown = 0;
@@ -275,7 +279,13 @@ function partRatio(p) { return p.hp / p.max; }
 function chestRatio(u) { return clamp(u.body.chest.hp / u.body.chest.max, -1, 1); }
 function armsUsable(u) { return (u.body.armL.hp > 0 ? 1 : 0) + (u.body.armR.hp > 0 ? 1 : 0); }
 function legsUsable(u) { return (u.body.legL.hp > 0 ? 1 : 0) + (u.body.legR.hp > 0 ? 1 : 0); }
-function moveSpeedOf(u) { return u.speed * (0.5 + 0.25 * legsUsable(u)); }
+function moveSpeedOf(u) {
+  var m = u.speed * (0.5 + 0.25 * legsUsable(u));
+  /* T169 战吼附加：头目狂暴加速 / 被震慑者减速 */
+  if ((u.rageT || 0) > 0) m *= 1.35;
+  if ((u.fearSlowT || 0) > 0) m *= 0.7;
+  return m;
+}
 
 /* ---------------- 单位工厂 ---------------- */
 function makeUnit(opts) {
@@ -531,6 +541,32 @@ function aiThink(u) {
       u.flankSide = undefined;
       u._flankFor = null;
     }
+
+    /* T170 食尸：无目标时靠近尸体进食回血；被打断（combatT）即放弃。
+     * 进食中的野兽注意力被分散——玩家可趁机偷袭。 */
+    if (!u.attackTarget) {
+      if ((u.combatT || 0) > 0) u.eatCorpse = null;
+      if (u.eatCorpse && u.eatCorpse.state !== 'dead') u.eatCorpse = null;
+      if (u.eatCorpse === null || u.eatCorpse === undefined) {
+        var cdBest = null, cdD = 90;
+        for (var ci = 0; ci < units.length; ci++) {
+          var cc = units[ci];
+          if (cc.state !== 'dead') continue;
+          var dcd = dist(u, cc);
+          if (dcd < cdD) { cdD = dcd; cdBest = cc; }
+        }
+        u.eatCorpse = cdBest;
+      }
+      if (u.eatCorpse) {
+        u._aiState = 'wander';
+        if (dist(u, u.eatCorpse) > 30) {
+          u.moveTarget = { x: u.eatCorpse.x, y: u.eatCorpse.y };
+        } else {
+          u.moveTarget = null;   /* 就位进食，updateBeastFeeding 结算回复 */
+        }
+        return;
+      }
+    }
   }
 
   /* T159: 诱饵优先——野兽无目标且附近有肉块时被吸引 */
@@ -584,6 +620,23 @@ function updateBaits(dt) {
     if (baits[i].t > baits[i].life) baits.splice(i, 1);
   }
 }
+
+/* T170: 野兽进食结算——六部位缓慢回复 + 加速尸体消亡 */
+var PART_KEYS_FEED = ['head', 'chest', 'armL', 'armR', 'legL', 'legR'];
+function updateBeastFeeding(dt) {
+  for (var i = 0; i < units.length; i++) {
+    var b = units[i];
+    if (b.faction !== 'beast' || b.state === 'dead' || isDown(b)) continue;
+    var c = b.eatCorpse;
+    if (!c) continue;
+    if (c.state !== 'dead' || dist(b, c) > 40) { b.eatCorpse = null; continue; }
+    for (var k = 0; k < PART_KEYS_FEED.length; k++) {
+      var part = b.body[PART_KEYS_FEED[k]];
+      if (part && part.hp > 0) part.hp = Math.min(part.max, part.hp + 7 * dt);
+    }
+    c.deadT = (c.deadT || 0) + 3 * dt;   /* 尸体被啃食加速消失 */
+  }
+}
 function drawBaits() {
   for (var i = 0; i < baits.length; i++) {
     var b = baits[i];
@@ -607,29 +660,74 @@ function drawBaits() {
   }
 }
 
-/* ---------------- T157: 小队协防（半径内友军自动支援遇袭队友） ---------------- */
+/* ---------------- T157 协防 + T166 卫兵支援呼叫 + T168 声望驰援 ---------------- */
 function updateSquadSupport(dt) {
   supportCool -= dt;
   if (supportCool > 0) return;
   supportCool = 0.5;
   var RADIUS = 300;
+
+  /* 同阵营协防收集器：isGuardCall=true 时计入支援呼叫统计 */
+  function assistAllies(victim, attacker, radius, isGuardCall) {
+    for (var j2 = 0; j2 < units.length; j2++) {
+      var o = units[j2];
+      if (o.faction !== victim.faction || o === victim) continue;
+      if (o.state === 'dead' || isDown(o)) continue;
+      if (o.attackTarget || o.moveTarget) continue;   /* 不打断现有命令 */
+      if (o.isMerchant || (o.aggro != null && o.aggro <= 0)) continue; /* 非战斗单位 */
+      if (dist(o, victim) > radius) continue;
+      if (!validEnemyFor(o, attacker)) continue;
+      if (o.faction === 'player' && !autoDefend) continue;  /* 尊重自动防御开关 */
+      o.attackTarget = attacker;
+      if (isGuardCall) guardCallCount++; else supportCount++;
+    }
+  }
+
   for (var i = 0; i < units.length; i++) {
     var v = units[i];
     if (v.state === 'dead' || isDown(v)) continue;
     var atk = v.lastAttacker;
     if (!atk || atk.state === 'dead') continue;
     if (!hostile(v, atk)) continue;             /* 只对真实敌意袭击支援 */
-    for (var j = 0; j < units.length; j++) {
-      var o = units[j];
-      if (o.faction !== v.faction || o === v) continue;
-      if (o.state === 'dead' || isDown(o)) continue;
-      if (o.attackTarget || o.moveTarget) continue;   /* 不打断现有命令 */
-      if (o.isMerchant || (o.aggro != null && o.aggro <= 0)) continue; /* 非战斗单位 */
-      if (dist(o, v) > RADIUS) continue;
-      if (!validEnemyFor(o, atk)) continue;
-      if (o.faction === 'player' && !autoDefend) continue;  /* 尊重自动防御开关 */
-      o.attackTarget = atk;
-      supportCount++;
+
+    assistAllies(v, atk, RADIUS, false);
+
+    /* T166: 城镇遇袭 → 支援呼叫半径扩至 620px */
+    if (v.faction === 'town') {
+      for (var ti = 0; ti < towns.length; ti++) {
+        if (dist(v, towns[ti]) < towns[ti].r * 1.4) {
+          assistAllies(v, atk, 620, true);
+          if (gameTime > guardCallLogCool) {
+            guardCallLogCool = gameTime + 12;
+            log(towns[ti].name + ' 遇袭！卫兵支援呼叫已发出', 'bad');
+          }
+          break;
+        }
+      }
+    }
+
+    /* T168: 声望联动——高声望(≥20)城镇卫兵主动驰援玩家 */
+    if (v.faction === 'player') {
+      for (var pi = 0; pi < towns.length; pi++) {
+        var tn = towns[pi];
+        if (dist(v, tn) > tn.r * 1.2) continue;
+        if ((res.rep[pi] || 0) >= 20) {
+          for (var gj = 0; gj < units.length; gj++) {
+            var gd = units[gj];
+            if (gd.faction !== 'town' || gd.state === 'dead' || isDown(gd)) continue;
+            if (gd.attackTarget || gd.moveTarget) continue;
+            if (dist(gd, v) > 420) continue;
+            if (!validEnemyFor(gd, atk)) continue;
+            gd.attackTarget = atk;
+            repAssistCount++;
+            if (gameTime > repAssistLogCool) {
+              repAssistLogCool = gameTime + 10;
+              log('声望卓著！' + tn.name + ' 的卫兵主动驰援你作战', 'gold');
+            }
+          }
+        }
+        break; /* 只取最近的一座城判定 */
+      }
     }
   }
 }
@@ -702,6 +800,29 @@ function updateUnit(u, dt) {
   u.wakeGrace = Math.max(0, u.wakeGrace - dt);
   u.fearT = Math.max(0, u.fearT - dt);
   u.combatT = Math.max(0, u.combatT - dt);
+  /* T169 战吼计时 */
+  u.rageT = Math.max(0, (u.rageT || 0) - dt);
+  u.rageCd = Math.max(0, (u.rageCd || 0) - dt);
+  u.fearSlowT = Math.max(0, (u.fearSlowT || 0) - dt);
+
+  /* T169 头目战吼：接敌即触发，冷却 18s——自我加速 + 震慑弱敌 */
+  if (u.isBoss && u.attackTarget && (u.rageCd || 0) <= 0) {
+    u.rageT = 5;
+    u.rageCd = 18;
+    addText(u.x, u.y - 40, '⚔ 战吼！', '#ff9c6b');
+    addRing(u.x, u.y);
+    sfx('howl');
+    log(u.name + ' 发出了震慑荒原的战吼！', 'bad');
+    for (var wi = 0; wi < units.length; wi++) {
+      var wv = units[wi];
+      if (wv.state === 'dead' || isDown(wv)) continue;
+      if (!hostile(u, wv)) continue;
+      if (wv.maxHp > 85) continue;              /* 只震慑弱者 */
+      if (dist(wv, u) > 220) continue;
+      wv.fearSlowT = 3;
+      addText(wv.x, wv.y - 22, '被震慑', '#c9a0ff');
+    }
+  }
 
   // 玩家饥饿（已迁 systems/Survival.js）
   if (SurvivalSys.hungerTick(u, dt)) return;
@@ -1383,7 +1504,7 @@ function applyLoot(found, x, y, who) {
 }
 
 /* ---------------- v0.3 营地 / 睡眠 / 俘虏 / 建造 ---------------- */
-var DEFAULT_HINT = '左键选择 · 右键移动/攻击 · Tab 全队 · E 商店 · F 进食 · R 救助 · C 绷带 · V 扎营 · Z 睡觉 · X 俘虏 · B 建造 · H 帮助';
+var DEFAULT_HINT = '左键选择 · 右键移动/攻击 · Tab 全队 · E 商店/废墟 · F 进食 · R 救助 · C 绷带 · V 扎营 · Z 睡觉 · X 俘虏/驻守 · J 诱饵 · B 建造 · M 地图 · H 帮助';
 
 function tutStep(n) {
   if (tutorial < n) tutorial = n;
@@ -1469,6 +1590,31 @@ function tryCaptureOrFree() {
         log(u.name + ' 正在捆缚 ' + t.name + '……', 'sys');
         return;
       }
+    }
+  }
+  /* T165 驻守/取消驻守：营地篝火旁的奴隶可切换驻守 */
+  for (var s2 = 0; s2 < selection.length; s2++) {
+    var su0 = selection[s2];
+    if (!canAct(su0)) continue;
+    for (var m2 = 0; m2 < units.length; m2++) {
+      var sl0 = units[m2];
+      if (sl0.faction !== 'slave' || dist(su0, sl0) >= 46) continue;
+      var nc = null;
+      for (var c2 = 0; c2 < camps.length; c2++) {
+        if (dist(sl0, camps[c2]) < 150) { nc = camps[c2]; break; }
+      }
+      if (!nc) continue;
+      if (sl0.stayAt) {
+        sl0.stayAt = null;
+        log(sl0.name + ' 取消驻守，恢复跟随搬运', 'sys');
+      } else {
+        sl0.stayAt = { x: nc.x, y: nc.y };
+        sl0.attackTarget = null; sl0.moveTarget = null;
+        log(sl0.name + ' 被指派驻守营地篝火（再按 X 取消）', 'good');
+        addText(sl0.x, sl0.y - 30, '驻守营地', '#9fd8a8');
+      }
+      sfx('ui');
+      return;
     }
   }
   /* 再看能否释放 */
@@ -2011,6 +2157,7 @@ function update(dt) {
   updateDangerEdge(dt);
   updateSquadSupport(dt);   /* T157 小队协防 */
   updateBaits(dt);          /* T159 诱饵寿命 */
+  updateBeastFeeding(dt);   /* T170 野兽食尸 */
 
   // 匪徒生成
   spawnTimer -= dt;
@@ -4058,7 +4205,9 @@ window.__ronin = {
   },
   spawnKindInfo: function () { return spawnKindUsed; },
   aiTrace: function () { return aiTraceBuf.slice(); },   /* T154 AI 状态迁移追踪 */
-  supportStats: function () { return { assists: supportCount }; },   /* T157 */
+  supportStats: function () {
+    return { assists: supportCount, guardCalls: guardCallCount, repAssists: repAssistCount };
+  },   /* T157/T166/T168 */
   baitsInfo: function () { return { count: baits.length, thrown: baitThrown }; },  /* T159 */
   findPathDemo: function (x1, y1, x2, y2) {               /* T160 寻路演示钩子 */
     if (!WR.Pathfinding) return null;

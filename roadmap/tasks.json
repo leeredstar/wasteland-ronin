@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-26T00:57:22.803Z",
+ "updatedAt": "2026-08-26T01:10:55.742Z",
  "total": 500,
- "done": 164,
+ "done": 170,
  "phases": [
   {
    "id": "M0",
@@ -1412,48 +1412,48 @@
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "俘虏驻守：可指派奴隶留守营地篝火",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:10:55.492Z"
   },
   {
    "id": "T166",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "卫兵支援：城镇遇袭时的支援呼叫半径机制",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:10:55.550Z"
   },
   {
    "id": "T167",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "阵营关系矩阵数据化（支持 MOD 修改敌我）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:10:55.597Z"
   },
   {
    "id": "T168",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "声望联动：高声望城镇卫兵主动协助玩家作战",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:10:55.647Z"
   },
   {
    "id": "T169",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "头目 AI：战吼技能（自我加速/震慑弱敌）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:10:55.695Z"
   },
   {
    "id": "T170",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "野兽食尸：靠近尸体进食回血（玩家可趁机偷袭）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:10:55.742Z"
   },
   {
    "id": "T171",

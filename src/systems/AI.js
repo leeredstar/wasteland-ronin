@@ -25,7 +25,8 @@
     FLEE: 'flee',       // 低血/遇袭逃跑
     LEASH: 'leash',     // 回岗（卫兵离岗 / T156 远离地盘放弃追击）
     FOLLOW: 'follow',   // 奴隶跟随主人
-    CARRY: 'carry'      // T164 奴隶搬运：走向附近掉落物
+    CARRY: 'carry',     // T164 奴隶搬运：走向附近掉落物
+    STAY: 'stay'        // T165 奴隶驻守：留守营地篝火
   };
 
   /* ---------------- 环境 ---------------- */
@@ -90,6 +91,18 @@
         u.attackTarget = null;
         return;
       }
+
+      /* T165 驻守态：被指派留守营地的奴隶原地看守 */
+      if (u.stayAt) {
+        setState(u, STATES.STAY);
+        if (E.dist(u, u.stayAt) > 42) {
+          u.moveTarget = { x: u.stayAt.x + E.rand(-14, 14), y: u.stayAt.y + E.rand(-14, 14) };
+        } else {
+          u.moveTarget = null;
+        }
+        return;
+      }
+
       setState(u, STATES.FOLLOW);
       var master = null, md = 1e9;
       var squad = E.livingSquad();
