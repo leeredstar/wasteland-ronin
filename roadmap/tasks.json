@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-26T00:33:44.346Z",
+ "updatedAt": "2026-08-26T00:45:09.462Z",
  "total": 500,
- "done": 156,
+ "done": 160,
  "phases": [
   {
    "id": "M0",
@@ -1348,32 +1348,32 @@
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "小队协防：队友遇袭时半径内友军自动支援",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:45:09.313Z"
   },
   {
    "id": "T158",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "狼群包抄：≥2 只时侧翼偏移包围目标点",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:45:09.364Z"
   },
   {
    "id": "T159",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "诱饵机制：投掷肉块吸引野兽优先级提升",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:45:09.414Z"
   },
   {
    "id": "T160",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "A* 寻路模块（网格实现，建筑/围墙为障碍）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:45:09.462Z"
   },
   {
    "id": "T161",

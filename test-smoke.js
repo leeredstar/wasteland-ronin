@@ -26,6 +26,7 @@ const FILES = [
   'src/systems/Build.js',
   'src/world/Spawner.js',
   'src/world/Terrain.js',
+  'src/world/Pathfinding.js',
   'js/game.js',
   'src/main.js'
 ];
@@ -297,6 +298,13 @@ try {
   const disc = R.discoveredInfo();
   if (!(disc.count >= 1)) throw new Error('no landmarks discovered (landmark system broken)');
   console.log('discovered:', JSON.stringify(disc), '| spawnKind:', R.spawnKindInfo());
+  /* ---- T157-T160 断言：协防钩子 / 诱饵 / A* 寻路 ---- */
+  if (typeof R.supportStats().assists !== 'number') throw new Error('supportStats bad');
+  if (typeof R.baitsInfo().thrown !== 'number') throw new Error('baitsInfo bad');
+  const towns2 = R.townsList();
+  const fp = R.findPathDemo(towns2[0].x, towns2[0].y, towns2[1].x, towns2[1].y);
+  if (!fp || !(fp.points >= 2)) throw new Error('A* path between towns failed: ' + JSON.stringify(fp));
+  console.log('a*: hub->corner', JSON.stringify(fp));
   console.log('SMOKE PASS');
 } catch (err) {
   console.error('SMOKE FAIL:', (err && err.stack) || err);

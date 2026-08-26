@@ -26,6 +26,7 @@
 | src/entities/Skills.js | 0 | ✅ 通过 |
 | src/entities/Skills.js.js | 0 | ✅ 通过 |
 | src/world/Map.js.js | 0 | ✅ 通过 |
+| src/world/Pathfinding.js | 0 | ✅ 通过 |
 | src/world/Spawner.js | 0 | ✅ 通过 |
 | src/world/Spawner.js.js | 0 | ✅ 通过 |
 | src/world/Terrain.js | 0 | ✅ 通过 |
@@ -41,21 +42,21 @@
 - L70: `document.getElementById` — var canvas = document.getElementById('game');
 - L72: `document.getElementById` — var mmCanvas = document.getElementById('minimap');
 - L74: `document.getElementById` — var bodyCanvas = document.getElementById('bodyCanvas');
-- L154: `document.getElementById` — var $ = function (id) { return document.getElementById(id); };
-- L209: `document.createElement` — var li = document.createElement('li');
-- L1032: `document.createElement` — var rowEl = document.createElement('div');
-- L1034: `document.createElement` — var left = document.createElement('div');
-- L1036: `document.createElement` — var btn = document.createElement('button');
-- L1766: `document.getElementById` — var box = document.getElementById('spawnChoices');
-- L1778: `document.readyState` — if (document.readyState === 'loading') {
-- L1779: `document.addEventListener` — document.addEventListener('DOMContentLoaded', bind);
-- L1786: `document.getElementById` — var bar = document.getElementById('errBanner');
-- L1788: `document.createElement` — bar = document.createElement('div');
-- L1791: `document.body` — document.body.appendChild(bar);
-- L2206: `document.createElement` — var c = document.createElement('canvas');
-- L2439: `document.createElement` — var c = document.createElement('canvas');
-- L2560: `document.createElement` — var c = document.createElement('canvas');
-- L3392: `document.createElement` — cv = document.createElement('canvas');
+- L161: `document.getElementById` — var $ = function (id) { return document.getElementById(id); };
+- L216: `document.createElement` — var li = document.createElement('li');
+- L1161: `document.createElement` — var rowEl = document.createElement('div');
+- L1163: `document.createElement` — var left = document.createElement('div');
+- L1165: `document.createElement` — var btn = document.createElement('button');
+- L1896: `document.getElementById` — var box = document.getElementById('spawnChoices');
+- L1908: `document.readyState` — if (document.readyState === 'loading') {
+- L1909: `document.addEventListener` — document.addEventListener('DOMContentLoaded', bind);
+- L1916: `document.getElementById` — var bar = document.getElementById('errBanner');
+- L1918: `document.createElement` — bar = document.createElement('div');
+- L1921: `document.body` — document.body.appendChild(bar);
+- L2338: `document.createElement` — var c = document.createElement('canvas');
+- L2571: `document.createElement` — var c = document.createElement('canvas');
+- L2692: `document.createElement` — var c = document.createElement('canvas');
+- L3524: `document.createElement` — cv = document.createElement('canvas');
 
 ## 结论
 

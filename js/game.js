@@ -141,6 +141,13 @@ var caravansSpawned = 0;
 var caravanSide = 0;
 var dangerLogCool = 0;
 
+/* T157-T159: 协防统计 / 狼群包抄 / 诱饵 */
+var supportCool = 0;
+var supportCount = 0;
+var baits = [];                   /* 肉块诱饵 {x,y,t,life} */
+var baitCd = 0;
+var baitThrown = 0;
+
 /* T140-T145: 狼巢 / 地标 / 大地图 / 出生点 */
 var dens = [];                    /* 运行时狼巢状态 {x,y,threatened,coolUntil} */
 var beastTimerDensOnly = 0;
@@ -498,12 +505,124 @@ function dropLoot(u) {
 /* ---------------- AI ---------------- */
 function aiThink(u) {
   AISys.think(u);
-  if (!self.__ff && u.attackTarget) {
-    self.__ff = true;
-    var _t = u.attackTarget;
-    console.log('[FIRST-ENGAGE]', u.faction, u.name, 'aggro=', u.aggro,
-      '->', _t.faction, _t.name, 'dist=', Math.hypot(_t.x - u.x, _t.y - u.y).toFixed(0),
-      'bright=', brightness().toFixed(3));
+
+  /* T158: 狼群包抄——同群≥2 只攻击同一目标时分配左右侧翼 */
+  if (u.isBeast) {
+    if (u.attackTarget) {
+      if (u._flankFor !== u.attackTarget) {
+        var mates = 0;
+        for (var fi = 0; fi < units.length; fi++) {
+          var fo = units[fi];
+          if (fo !== u && fo.isBeast && fo.state !== 'dead' &&
+              fo.attackTarget === u.attackTarget) mates++;
+        }
+        u.flankSide = (mates % 2 === 0) ? 1 : -1;
+        u._flankFor = u.attackTarget;
+      }
+    } else {
+      u.flankSide = undefined;
+      u._flankFor = null;
+    }
+  }
+
+  /* T159: 诱饵优先——野兽无目标且附近有肉块时被吸引 */
+  if (u.isBeast && !u.attackTarget && !u.lastAttacker && baits.length &&
+      u.fearT <= 0) {
+    var bb = null, bd2 = 620;
+    for (var bi = 0; bi < baits.length; bi++) {
+      var dB = dist(u, baits[bi]);
+      if (dB < bd2) { bd2 = dB; bb = baits[bi]; }
+    }
+    if (bb) {
+      u._aiState = 'wander';
+      if (dist(u, bb) > 26) {
+        u.moveTarget = { x: bb.x + rand(-10, 10), y: bb.y + rand(-10, 10) };
+      } else {
+        /* 啃食诱饵：消耗肉块并获得少量恢复 */
+        bb.life -= 6;
+        u.body.chest.hp = Math.min(u.body.chest.max, u.body.chest.hp + 6);
+      }
+    }
+  }
+
+  /* T157 支援标记：协防扫描在 updateSquadSupport 中节流处理 */
+}
+
+/* ---------------- T159: 诱饵机制 ---------------- */
+function throwBait() {
+  if (!started || gameOver) return;
+  if (baitCd > 0) { log('投饵还在冷却中', 'sys'); return; }
+  if (res.food <= 0) { log('没有干粮可做诱饵（城镇有售）', 'bad'); return; }
+  var cen = squadCentroid();
+  var aim = screenToWorld(mouse.x, mouse.y);
+  var dx = aim.x - cen.x, dy = aim.y - cen.y;
+  var dd = Math.sqrt(dx * dx + dy * dy) || 1;
+  var maxR = 380;
+  var px = cen.x + dx / dd * Math.min(dd, maxR);
+  var py = cen.y + dy / dd * Math.min(dd, maxR);
+  res.food--;
+  baits.push({ x: px, y: py, t: 0, life: 30 });
+  baitCd = 3;
+  baitThrown++;
+  log('投掷了肉块诱饵——附近的野兽会被吸引过来', 'sys');
+  addText(px, py - 16, '🥩 诱饵', '#e8b45a');
+  addRing(px, py);
+  sfx('ui');
+}
+function updateBaits(dt) {
+  baitCd -= dt;
+  for (var i = baits.length - 1; i >= 0; i--) {
+    baits[i].t += dt;
+    if (baits[i].t > baits[i].life) baits.splice(i, 1);
+  }
+}
+function drawBaits() {
+  for (var i = 0; i < baits.length; i++) {
+    var b = baits[i];
+    if (!inView(b.x, b.y, 40)) continue;
+    var fade = b.t > b.life - 5 ? (b.life - b.t) / 5 : 1;
+    ctx.globalAlpha = clamp(fade, 0, 1);
+    /* 肉块：骨柄+肉身 */
+    ctx.fillStyle = '#efe6d4';
+    ctx.fillRect(b.x + 2, b.y + 2, 12, 3);
+    ctx.fillStyle = '#c2594a';
+    ctx.beginPath(); ctx.ellipse(b.x - 3, b.y, 7.5, 6, 0.4, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.18)';
+    ctx.beginPath(); ctx.ellipse(b.x - 5, b.y - 2, 3, 2, 0.4, 0, TAU); ctx.fill();
+    /* 剩余时间弧 */
+    ctx.strokeStyle = '#e8b45a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 13, -Math.PI / 2, -Math.PI / 2 + (1 - b.t / b.life) * TAU);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+/* ---------------- T157: 小队协防（半径内友军自动支援遇袭队友） ---------------- */
+function updateSquadSupport(dt) {
+  supportCool -= dt;
+  if (supportCool > 0) return;
+  supportCool = 0.5;
+  var RADIUS = 300;
+  for (var i = 0; i < units.length; i++) {
+    var v = units[i];
+    if (v.state === 'dead' || isDown(v)) continue;
+    var atk = v.lastAttacker;
+    if (!atk || atk.state === 'dead') continue;
+    if (!hostile(v, atk)) continue;             /* 只对真实敌意袭击支援 */
+    for (var j = 0; j < units.length; j++) {
+      var o = units[j];
+      if (o.faction !== v.faction || o === v) continue;
+      if (o.state === 'dead' || isDown(o)) continue;
+      if (o.attackTarget || o.moveTarget) continue;   /* 不打断现有命令 */
+      if (o.isMerchant || (o.aggro != null && o.aggro <= 0)) continue; /* 非战斗单位 */
+      if (dist(o, v) > RADIUS) continue;
+      if (!validEnemyFor(o, atk)) continue;
+      if (o.faction === 'player' && !autoDefend) continue;  /* 尊重自动防御开关 */
+      o.attackTarget = atk;
+      supportCount++;
+    }
   }
 }
 
@@ -646,7 +765,17 @@ function updateUnit(u, dt) {
 
   if (tgt) {
     /* 攻击管线已收敛至 systems/Combat.js（T034） */
-    CombatSys.stepAttack(u, tgt, dt, { tryHit: tryHit, moveToward: moveToward, dist: dist });
+    /* T158 狼群包抄：带侧翼标记的野兽走弧线接近，≥2 只时形成合围 */
+    var mv = moveToward;
+    if (u.isBeast && u.flankSide && dist(u, tgt) > 80) {
+      mv = function (uu, tx, ty, dtt) {
+        var ddx = tx - uu.x, ddy = ty - uu.y;
+        var dd2 = Math.sqrt(ddx * ddx + ddy * ddy);
+        var pa = Math.atan2(ddy, ddx) + uu.flankSide * 0.9;
+        moveToward(uu, uu.x + Math.cos(pa) * dd2, uu.y + Math.sin(pa) * dd2, dtt);
+      };
+    }
+    CombatSys.stepAttack(u, tgt, dt, { tryHit: tryHit, moveToward: mv, dist: dist });
   } else if (u.moveTarget) {
     moveToward(u, u.moveTarget.x, u.moveTarget.y, dt);
     if (dist(u, u.moveTarget) < 8) u.moveTarget = null;
@@ -1665,6 +1794,7 @@ window.addEventListener('keydown', function (e) {
     case 'KeyR': tryRescue(); break;
     case 'KeyC': tryBandage(); break;
     case 'KeyV': tryCamp(); break;
+    case 'KeyJ': throwBait(); break;   /* T159 投饵 */
     case 'KeyZ': trySleep(); break;
     case 'KeyX': tryCaptureOrFree(); break;
     case 'KeyB': cycleBuildMode(); break;
@@ -1871,6 +2001,8 @@ function update(dt) {
   updateScavChan(dt);
   updateCaravan(dt);
   updateDangerEdge(dt);
+  updateSquadSupport(dt);   /* T157 小队协防 */
+  updateBaits(dt);          /* T159 诱饵寿命 */
 
   // 匪徒生成
   spawnTimer -= dt;
@@ -3756,6 +3888,7 @@ function render() {
   drawStructures();
   drawDecals();
   drawMotes();
+  drawBaits();
   drawLootBags();
   drawUnits();
   drawParticlesAndTexts();
@@ -3917,6 +4050,25 @@ window.__ronin = {
   },
   spawnKindInfo: function () { return spawnKindUsed; },
   aiTrace: function () { return aiTraceBuf.slice(); },   /* T154 AI 状态迁移追踪 */
+  supportStats: function () { return { assists: supportCount }; },   /* T157 */
+  baitsInfo: function () { return { count: baits.length, thrown: baitThrown }; },  /* T159 */
+  findPathDemo: function (x1, y1, x2, y2) {               /* T160 寻路演示钩子 */
+    if (!WR.Pathfinding) return null;
+    var pf = WR.Pathfinding.create({
+      worldW: WORLD.w, worldH: WORLD.h, cell: 40,
+      isBlocked: function (cx, cy) {
+        var px = cx * 40 + 20, py = cy * 40 + 20;
+        for (var i = 0; i < obstacles.length; i++) {
+          var dx = px - obstacles[i].x, dy = py - obstacles[i].y;
+          var rr = obstacles[i].r + 8;
+          if (dx * dx + dy * dy < rr * rr) return true;
+        }
+        return false;
+      }
+    });
+    var p = pf.findPath(x1, y1, x2, y2);
+    return p ? { points: p.length, start: p[0], end: p[p.length - 1] } : null;
+  },
   gates: function () {
     return { started: started, gameOver: gameOver, helpOpen: helpOpen,
              shopOpen: shopOpen, sleeping: sleeping, buildMode: buildMode, mapOpen: mapOpen };

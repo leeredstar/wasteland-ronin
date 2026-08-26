@@ -134,6 +134,37 @@ console.log('[T154] DEBUG 迁移追踪');
     traceBuf.every(e2 => e2.name && e2.from !== undefined && e2.to !== undefined));
 }
 
+console.log('[T160] A* 寻路模块');
+{
+  const PF = require(path.join(ROOT, 'src/world/Pathfinding.js'));
+  /* 1) 空网格直线可达 */
+  const open = PF.create({ worldW: 800, worldH: 800, cell: 40 });
+  const p1 = open.findPath(40, 40, 760, 760);
+  t('空网格：找到路径', !!p1 && p1.length >= 3);
+  t('终点为精确坐标', !!p1 && p1[p1.length - 1].x === 760 && p1[p1.length - 1].y === 760);
+
+  /* 2) 垂直墙（col=10）留缺口 → 必须绕到缺口 */
+  const wallCol = 10;
+  const walled = PF.create({
+    worldW: 800, worldH: 800, cell: 40,
+    isBlocked: (cx, cy) => cx === wallCol && !(cy >= 9 && cy <= 11)
+  });
+  const p2 = walled.findPath(200, 400, 600, 400);
+  t('有墙+缺口：仍可达', !!p2);
+  if (p2) {
+    const throughGap = p2.some(pt =>
+      Math.abs(pt.x - (wallCol * 40 + 20)) < 45 && pt.y >= 340 && pt.y <= 470);
+    t('路径穿过缺口区域', throughGap);
+  }
+
+  /* 3) 完全围死 → null */
+  const sealed = PF.create({
+    worldW: 800, worldH: 800, cell: 40,
+    isBlocked: (cx) => cx === 10
+  });
+  t('完全阻隔返回 null', sealed.findPath(200, 400, 600, 400) === null);
+}
+
 console.log(`\nM6 单元测试: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
 console.log('ALL PASS');
