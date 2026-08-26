@@ -468,6 +468,14 @@ AISys.attach({
   findNearestHostile: findNearestHostile,
   livingSquad: livingSquad,
   text: addText,
+  nearestLoot: function (u) {                /* T164 奴隶搬运目标查询 */
+    var best = null, bd = 260;
+    for (var li = 0; li < loot.length; li++) {
+      var d2 = dist(u, loot[li]);
+      if (d2 < bd) { bd = d2; best = loot[li]; }
+    }
+    return best;
+  },
   balance: (WR.BALANCE && WR.BALANCE.AI) || null,          /* T153/T156 */
   brightness: function () { return brightness(); },         /* T155 夜间视野 */
   trace: function (ev) {                                    /* T154 迁移追踪 */

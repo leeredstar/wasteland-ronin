@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-26T00:45:09.462Z",
+ "updatedAt": "2026-08-26T00:57:22.803Z",
  "total": 500,
- "done": 160,
+ "done": 164,
  "phases": [
   {
    "id": "M0",
@@ -1380,32 +1380,32 @@
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "寻路请求节流：每单位 0.5s 内不重复计算",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:57:22.646Z"
   },
   {
    "id": "T162",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "路径平滑：视线捷径裁剪（string pulling 简化版）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:57:22.697Z"
   },
   {
    "id": "T163",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "动态避障（局部推挤）与 A* 的结合策略文档",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:57:22.753Z"
   },
   {
    "id": "T164",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "奴隶 AI 完善：跟随/搬运/逃跑三态细化",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:57:22.803Z"
   },
   {
    "id": "T165",

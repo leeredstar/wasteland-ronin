@@ -24,7 +24,8 @@
     CHASE: 'chase',     // 锁定目标交战
     FLEE: 'flee',       // 低血/遇袭逃跑
     LEASH: 'leash',     // 回岗（卫兵离岗 / T156 远离地盘放弃追击）
-    FOLLOW: 'follow'    // 奴隶跟随主人
+    FOLLOW: 'follow',   // 奴隶跟随主人
+    CARRY: 'carry'      // T164 奴隶搬运：走向附近掉落物
   };
 
   /* ---------------- 环境 ---------------- */
@@ -95,6 +96,15 @@
       for (var mi = 0; mi < squad.length; mi++) {
         var dM = E.dist(u, squad[mi]);
         if (dM < md) { md = dM; master = squad[mi]; }
+      }
+      /* T164 搬运态：附近有掉落物时优先去捡（拾取由宿主 pickups 统一结算） */
+      if (E.nearestLoot) {
+        var lt = E.nearestLoot(u);
+        if (lt) {
+          setState(u, STATES.CARRY);
+          u.moveTarget = { x: lt.x, y: lt.y };
+          return;
+        }
       }
       if (master && md > 170) {
         u.moveTarget = { x: master.x + E.rand(-50, 50), y: master.y + E.rand(-50, 50) };

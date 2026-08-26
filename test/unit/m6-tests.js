@@ -52,6 +52,7 @@ AI.attach({
   text: () => {},
   brightness: () => 1,
   balance: BALANCE.AI,
+  nearestLoot: u => u._loot || null,     /* T164 */
   trace: ev => traceBuf.push(ev)
 });
 
@@ -137,16 +138,22 @@ console.log('[T154] DEBUG 迁移追踪');
 console.log('[T160] A* 寻路模块');
 {
   const PF = require(path.join(ROOT, 'src/world/Pathfinding.js'));
-  /* 1) 空网格直线可达 */
+  /* 1) 空网格直线可达（默认开启平滑，直线路径折叠为少量点） */
   const open = PF.create({ worldW: 800, worldH: 800, cell: 40 });
   const p1 = open.findPath(40, 40, 760, 760);
-  t('空网格：找到路径', !!p1 && p1.length >= 3);
+  t('空网格：找到路径', !!p1 && p1.length >= 2);
   t('终点为精确坐标', !!p1 && p1[p1.length - 1].x === 760 && p1[p1.length - 1].y === 760);
 
-  /* 2) 垂直墙（col=10）留缺口 → 必须绕到缺口 */
+  /* 1b) 关闭平滑时保留完整格点序列 */
+  const rawPf = PF.create({ worldW: 800, worldH: 800, cell: 40, smooth: false });
+  const raw = rawPf.findPath(40, 40, 760, 760);
+  t('关闭平滑：保留格点序列（>6 点）', !!raw && raw.length > 6);
+
+  /* 2) 垂直墙（col=10）留缺口 → 必须绕到缺口；用未平滑路径做几何断言 */
   const wallCol = 10;
   const walled = PF.create({
     worldW: 800, worldH: 800, cell: 40,
+    smooth: false,
     isBlocked: (cx, cy) => cx === wallCol && !(cy >= 9 && cy <= 11)
   });
   const p2 = walled.findPath(200, 400, 600, 400);
@@ -160,9 +167,52 @@ console.log('[T160] A* 寻路模块');
   /* 3) 完全围死 → null */
   const sealed = PF.create({
     worldW: 800, worldH: 800, cell: 40,
+    smooth: false,
     isBlocked: (cx) => cx === 10
   });
   t('完全阻隔返回 null', sealed.findPath(200, 400, 600, 400) === null);
+}
+
+console.log('[T161/T162] 节流规划器 + 路径平滑');
+{
+  const PF = require(path.join(ROOT, 'src/world/Pathfinding.js'));
+  /* 平滑：空网格对角路径应被大幅裁剪（默认开启平滑） */
+  const open = PF.create({ worldW: 800, worldH: 800, cell: 40 });
+  const sm2 = open.findPath(40, 40, 760, 760);
+  t('平滑后点数 ≤4', !!sm2 && sm2.length <= 4);
+  const smEnd = sm2[sm2.length - 1];
+  t('平滑保留精确终点', smEnd.x === 760 && smEnd.y === 760);
+
+  /* 节流：同 key 同目的地冷却期内走缓存 */
+  let calls = 0;
+  const pfStub = { findPath: () => { calls++; return [{ x: 0, y: 0 }]; } };
+  let fakeT = 0;
+  const planner = PF.createPlanner({ pf: pfStub, cooldown: 0.5, now: () => fakeT });
+  planner.request('hero', 0, 0, 500, 500);
+  planner.request('hero', 2, 2, 505, 503);      // 冷却内近似同目的地
+  t('冷却期内复用缓存', calls === 1);
+  fakeT = 1.0;
+  planner.request('hero', 0, 0, 500, 500);      // 冷却结束重算
+  t('冷却结束重新计算', calls === 2);
+}
+
+console.log('[T164] 奴隶搬运三态细化');
+{
+  const carrier = mkUnit({ faction: 'slave' });
+  carrier._loot = { x: 120, y: 80 };
+  AI.think(carrier);
+  t('附近有掉落物 → CARRY 且走向掉落点', carrier._aiState === 'carry' &&
+    carrier.moveTarget && Math.abs(carrier.moveTarget.x - 120) < 0.01);
+
+  const follower = mkUnit({ faction: 'slave' });   // 无掉落 → FOLLOW
+  AI.think(follower);
+  t('无掉落 → 保持 FOLLOW', follower._aiState === 'follow');
+
+  const scared = mkUnit({ faction: 'slave' });
+  scared.lastAttacker = mkUnit({ faction: 'bandit', x: 60, y: 0 });
+  scared._loot = { x: 0, y: 0 };
+  AI.think(scared);
+  t('遇袭时 FLEE 优先于搬运', scared._aiState === 'flee');
 }
 
 console.log(`\nM6 单元测试: ${passed} passed, ${failed} failed`);

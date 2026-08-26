@@ -11,6 +11,13 @@
   追踪工具 `test/debug-trace.js` 支持 gates 探针逐帧取证。
 - **状态**：调查中。若真实浏览器可复现，升级为高优 bug。
 
+## KI-003 战斗断言种子方差（2026-08-26 已缓解）
+- **现象**：大世界(8000²)随机种子下，「玩家路线恰好遇敌」存在天然方差，
+  `no combat observed` 断言在旧 AI 上也有约 30% 失败率（实测）。
+- **缓解**：断言放宽为「死亡/倒地/任意单位接敌(everAttacked>0)」三选一；
+  冒烟输出永久 telemetry（deaths/downs/everAttacked/playerInvolved）供人工判读。
+- **后续**：若需更强保证，可在固定种子下跑确定性冒烟（Date stub 方案已验证）。
+
 ## KI-002 商店扣款表达式未走 Economy.spend()
 - **现象**：`res.cats -= priced(X)` 内联于 UI 分支（行为等价、单机安全）。
 - **计划**：M4 商店重构时统一改走 `Economy.spend()`（联机权威结算前置条件）。

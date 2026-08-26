@@ -133,7 +133,35 @@
       }
       out.reverse();
       out.push({ x: gx, y: gy });   /* 精确终点 */
+
+      /* T162: 视线捷径裁剪（string pulling 简化版） */
+      if (opts.smooth !== false) out = smoothPath(out, walkable);
       return out;
+    }
+
+    /* T162: 沿线采样可走性，逐步剪掉可直达的中间路径点 */
+    function smoothPath(pts, walkFn) {
+      if (!pts || pts.length < 3) return pts;
+      var res2 = [pts[0]];
+      var i = 0;
+      while (i < pts.length - 1) {
+        var j = pts.length - 1;
+        for (; j > i + 1; j--) {
+          if (segClear(pts[i], pts[j], walkFn)) break;
+        }
+        res2.push(pts[j]);
+        i = j;
+      }
+      return res2;
+    }
+    function segClear(a, b, walkFn) {
+      var d = Math.hypot(b.x - a.x, b.y - a.y);
+      var steps = Math.max(2, Math.ceil(d / (cell / 2)));
+      for (var s2 = 1; s2 <= steps; s2++) {
+        var t3 = s2 / steps;
+        if (!walkFn(a.x + (b.x - a.x) * t3, a.y + (b.y - a.y) * t3)) return false;
+      }
+      return true;
     }
 
     function nearestOpen(cx, cy, radius) {
@@ -148,12 +176,18 @@
       return null;
     }
 
+    /* 可走性查询（平滑用）：默认=所在格未阻挡；宿主可注入更细粒度 */
+    var walkable = opts.walkable || function (px, py) {
+      return !blocked(Math.floor(px / cell), Math.floor(py / cell));
+    };
+
     return {
       cell: cell,
       cols: cols,
       rows: rows,
       findPath: findPath,
-      blocked: blocked
+      blocked: blocked,
+      smoothPath: smoothPath
     };
   }
 
@@ -163,5 +197,34 @@
     return (dx > dy ? dx + 0.4142 * dy : dy + 0.4142 * dx); /* octile */
   }
 
-  return { create: create };
+  /* ---------------- T161: 寻路请求节流规划器 ---------------- */
+  /**
+   * createPlanner({ pf, cooldown=0.5, now=fn(秒) })
+   * 同一 key 在冷却期内、起终点近似不变时复用上次路径。
+   */
+  function createPlanner(opts) {
+    opts = opts || {};
+    var pf = opts.pf;
+    var cd = opts.cooldown != null ? opts.cooldown : 0.5;
+    var now = opts.now || function () { return Date.now() / 1000; };
+    var last = {};
+    return {
+      /** 返回 {path, cached}；冷却期内同目的地返回缓存 */
+      request: function (key, sx, sy, gx, gy) {
+        var t = now();
+        var c = last[key];
+        if (c && (t - c.t) < cd &&
+            Math.abs(c.gx - gx) < 8 && Math.abs(c.gy - gy) < 8 &&
+            Math.abs(c.sx - sx) < 24 && Math.abs(c.sy - sy) < 24) {
+          return { path: c.path, cached: true };
+        }
+        var path = pf.findPath(sx, sy, gx, gy);
+        last[key] = { t: t, sx: sx, sy: sy, gx: gx, gy: gy, path: path };
+        return { path: path, cached: false };
+      },
+      reset: function () { last = {}; }
+    };
+  }
+
+  return { create: create, createPlanner: createPlanner };
 });
