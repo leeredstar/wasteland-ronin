@@ -252,6 +252,15 @@ try {
   const st = R.state();
   console.log('--- smoke result ---');
   console.log('started:', st.started, '| day:', st.day, '| gameTime:', st.time.toFixed(1) + 's');
+  /* 战斗遥测（诊断 KI-001 家族偶发）：死亡/倒地/接敌计数 */
+  const __u = R.unitsList();
+  const deaths = __u.filter(u => u.state === 'dead').length;
+  const downs = __u.filter(u => u.state === 'down').length;
+  const engaged = __u.filter(u => u.lastAttacker).length;
+  const playerEngaged = __u.filter(u => u.lastAttacker &&
+    (u.faction === 'player' || u.lastAttacker.faction === 'player')).length;
+  console.log('telemetry: deaths=' + deaths, 'downs=' + downs,
+    'everAttacked=' + engaged, 'playerInvolved=' + playerEngaged);
   console.log('sawDead:', sawDead, '| sawDowned:', sawDowned, '| lootGained:', sawLoot);
   console.log('resources:', JSON.stringify(R.resources()));
   if (!st.started) throw new Error('game did not start');

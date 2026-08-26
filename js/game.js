@@ -344,7 +344,12 @@ function validEnemyFor(a, b) {
 }
 
 function findNearestHostile(u, range) {
-  var best = null, bd = range;
+  var __n=(self.__fn=(self.__fn||0)+1);
+  var __mul = (WR.AI.visionMul ? WR.AI.visionMul(brightness()) : 1);
+  if(__n<5) console.log('[EFF]', 'range=',range,'bright=',brightness(),'mul=',__mul,'eff=',range*__mul);
+  /* T155: 统一视野判定——距离 × 昼夜视野系数（深夜缩至 60%） */
+  var eff = range * (WR.AI.visionMul ? WR.AI.visionMul(brightness()) : 1);
+  var best = null, bd = eff;
   for (var i = 0; i < units.length; i++) {
     var o = units[i];
     if (!validEnemyFor(u, o)) continue;
@@ -444,8 +449,9 @@ var SURVB = WR.BALANCE && WR.BALANCE.SURVIVAL ? WR.BALANCE.SURVIVAL : { WAKE_GRA
 
 function tryHit(a, d) { return CombatSys.tryHit(a, d); }
 
-/* ---- AI 决策已迁移至 src/systems/AI.js（T021）---- */
+/* ---- AI 决策已迁移至 src/systems/AI.js（T021；T153-T156 状态机化）---- */
 var AISys = WR.AI;
+var aiTraceBuf = [];
 AISys.attach({
   rand: function () { return WR.App.rng.next(); },
   WORLD: WORLD,
@@ -454,7 +460,13 @@ AISys.attach({
   chestRatio: function (u2) { return u2.body.chest.hp / u2.body.chest.max; },
   findNearestHostile: findNearestHostile,
   livingSquad: livingSquad,
-  text: addText
+  text: addText,
+  balance: (WR.BALANCE && WR.BALANCE.AI) || null,          /* T153/T156 */
+  brightness: function () { return brightness(); },         /* T155 夜间视野 */
+  trace: function (ev) {                                    /* T154 迁移追踪 */
+    aiTraceBuf.push(ev);
+    if (aiTraceBuf.length > 120) aiTraceBuf.shift();
+  }
 });
 /* ---- 生存系统已迁移至 src/systems/Survival.js（T022）---- */
 var SurvivalSys = WR.Survival;
@@ -484,7 +496,16 @@ function dropLoot(u) {
 }
 
 /* ---------------- AI ---------------- */
-function aiThink(u) { AISys.think(u); }
+function aiThink(u) {
+  AISys.think(u);
+  if (!self.__ff && u.attackTarget) {
+    self.__ff = true;
+    var _t = u.attackTarget;
+    console.log('[FIRST-ENGAGE]', u.faction, u.name, 'aggro=', u.aggro,
+      '->', _t.faction, _t.name, 'dist=', Math.hypot(_t.x - u.x, _t.y - u.y).toFixed(0),
+      'bright=', brightness().toFixed(3));
+  }
+}
 
 /* ---------------- 移动 ---------------- */
 function moveToward(u, tx, ty, dt) {
@@ -3895,6 +3916,7 @@ window.__ronin = {
     return { count: n, total: marks.length };
   },
   spawnKindInfo: function () { return spawnKindUsed; },
+  aiTrace: function () { return aiTraceBuf.slice(); },   /* T154 AI 状态迁移追踪 */
   gates: function () {
     return { started: started, gameOver: gameOver, helpOpen: helpOpen,
              shopOpen: shopOpen, sleeping: sleeping, buildMode: buildMode, mapOpen: mapOpen };

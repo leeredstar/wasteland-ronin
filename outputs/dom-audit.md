@@ -43,19 +43,19 @@
 - L74: `document.getElementById` — var bodyCanvas = document.getElementById('bodyCanvas');
 - L154: `document.getElementById` — var $ = function (id) { return document.getElementById(id); };
 - L209: `document.createElement` — var li = document.createElement('li');
-- L1011: `document.createElement` — var rowEl = document.createElement('div');
-- L1013: `document.createElement` — var left = document.createElement('div');
-- L1015: `document.createElement` — var btn = document.createElement('button');
-- L1745: `document.getElementById` — var box = document.getElementById('spawnChoices');
-- L1757: `document.readyState` — if (document.readyState === 'loading') {
-- L1758: `document.addEventListener` — document.addEventListener('DOMContentLoaded', bind);
-- L1765: `document.getElementById` — var bar = document.getElementById('errBanner');
-- L1767: `document.createElement` — bar = document.createElement('div');
-- L1770: `document.body` — document.body.appendChild(bar);
-- L2185: `document.createElement` — var c = document.createElement('canvas');
-- L2418: `document.createElement` — var c = document.createElement('canvas');
-- L2539: `document.createElement` — var c = document.createElement('canvas');
-- L3371: `document.createElement` — cv = document.createElement('canvas');
+- L1032: `document.createElement` — var rowEl = document.createElement('div');
+- L1034: `document.createElement` — var left = document.createElement('div');
+- L1036: `document.createElement` — var btn = document.createElement('button');
+- L1766: `document.getElementById` — var box = document.getElementById('spawnChoices');
+- L1778: `document.readyState` — if (document.readyState === 'loading') {
+- L1779: `document.addEventListener` — document.addEventListener('DOMContentLoaded', bind);
+- L1786: `document.getElementById` — var bar = document.getElementById('errBanner');
+- L1788: `document.createElement` — bar = document.createElement('div');
+- L1791: `document.body` — document.body.appendChild(bar);
+- L2206: `document.createElement` — var c = document.createElement('canvas');
+- L2439: `document.createElement` — var c = document.createElement('canvas');
+- L2560: `document.createElement` — var c = document.createElement('canvas');
+- L3392: `document.createElement` — cv = document.createElement('canvas');
 
 ## 结论
 

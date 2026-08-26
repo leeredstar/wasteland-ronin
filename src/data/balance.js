@@ -12,6 +12,16 @@
   'use strict';
 
   return {
+    /* ---- AI（M6/T153-T156 迁入） ---- */
+    AI: {
+      CHASE_GIVE_UP: 620,     /* 距攻击目标超过此值 → 放弃追击返回 */
+      GUARD_LEASH: 340,       /* 卫兵离岗 leash 距离 */
+      NIGHT_VISION_MIN: 0.6,  /* 深夜视野系数（×白天全值） */
+      WANDER_TOWN_R: 140,     /* 卫兵巡城半径 */
+      WANDER_WILD_R: 260,     /* 野怪游荡半径 */
+      DEBUG: false            /* T154: 状态迁移追踪开关 */
+    },
+
     /* ---- 战斗（M1/T035-T036 迁入） ---- */
     COMBAT: {
       SWING_TIME: 0.22,

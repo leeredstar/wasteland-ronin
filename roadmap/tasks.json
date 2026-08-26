@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-25T23:38:53.349Z",
+ "updatedAt": "2026-08-26T00:33:44.346Z",
  "total": 500,
- "done": 152,
+ "done": 156,
  "phases": [
   {
    "id": "M0",
@@ -1316,32 +1316,32 @@
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "AI 有限状态机正式化：states 枚举 + 转移表驱动",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:33:44.196Z"
   },
   {
    "id": "T154",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "AI 调试日志开关 DEBUG_AI（状态迁移追踪）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:33:44.250Z"
   },
   {
    "id": "T155",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "统一视野判定 canSee：距离 + 夜间视野缩减系数",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:33:44.299Z"
   },
   {
    "id": "T156",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "追击放弃距离参数化（超远返回巡逻）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T00:33:44.346Z"
   },
   {
    "id": "T157",

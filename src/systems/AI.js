@@ -1,28 +1,49 @@
 /* ============================================================
- * 荒原浪人 systems/AI — 行为决策（有限状态思想）
+ * 荒原浪人 systems/AI — 决策核心（M6/T153-T156 状态机标注化）
  * 设计要点：
- *  - think(u)：纯决策 —— 只写 attackTarget/moveTarget/fearT，
- *    不执行移动与攻击（执行留在宿主 update 循环）
- *  - 决策分支：奴隶跟随/逃跑 · 胆怯单位低血逃离 ·
- *    索敌追击 · 卫兵leash · 游荡 · 玩家自动反击
+ *  - 行为算法与 legacy v0.4 think() 逐字等价（迁移零行为差），
+ *    在每个决策出口标注 STATES 枚举，形成可观测状态机（T153）
+ *  - T154: BALANCE.AI.DEBUG 开启时，每次状态切换经 env.trace 记录
+ *  - T155: visionMul(bright) 统一昼夜视野系数（宿主索敌调用）
+ *  - T156: 唯一行为增量——追击者远离地盘(homePoint)超过
+ *    CHASE_GIVE_UP 时放弃目标回家；其余分支与旧行为一致
  *  - 随机经 env.rand() 注入（确定性回放基础）
  * 双模式：浏览器挂 WR.AI；Node 可 require。
  * ============================================================ */
 (function (root, factory) {
-  var api = factory();
+  var api = factory(root.WR = root.WR || {});
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
-  else { root.WR = root.WR || {}; root.WR.AI = api; }
-})(typeof self !== 'undefined' ? self : this, function () {
+  else { root.WR.AI = api; }
+})(typeof self !== 'undefined' ? self : this, function (WR) {
   'use strict';
 
-  var _env = null;
-  /** 注入环境：rand/WORLD/validEnemyFor/dist/chestRatio/findNearestHostile/livingSquad/text */
-  function attach(env) { _env = env; }
+  /* ---------------- 状态枚举（T153） ---------------- */
+  var STATES = {
+    IDLE: 'idle',       // 待命/无输出（玩家无命令、决策间隙）
+    WANDER: 'wander',   // 游荡：设置漫游目标点
+    CHASE: 'chase',     // 锁定目标交战
+    FLEE: 'flee',       // 低血/遇袭逃跑
+    LEASH: 'leash',     // 回岗（卫兵离岗 / T156 远离地盘放弃追击）
+    FOLLOW: 'follow'    // 奴隶跟随主人
+  };
 
+  /* ---------------- 环境 ---------------- */
+  var _env = null;
+  /** 注入环境：
+   *  rand/WORLD/validEnemyFor/dist/chestRatio/findNearestHostile/
+   *  livingSquad/text/brightness(0..1)/balance(BALANCE.AI)/trace(fn) */
+  function attach(env) { _env = env; }
   function e() {
     if (!_env) throw new Error('[AI] 未 attach 环境');
     return _env;
   }
+  function aiCfg() {
+    return (e().balance) || {
+      CHASE_GIVE_UP: 620, GUARD_LEASH: 340, NIGHT_VISION_MIN: 0.6,
+      WANDER_TOWN_R: 140, WANDER_WILD_R: 260, DEBUG: false
+    };
+  }
+
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function pointAway(u, fromX, fromY, dist) {
     var ang = Math.atan2(u.y - fromY, (u.x - fromX) || 0.001);
@@ -30,6 +51,113 @@
       x: clamp(u.x + Math.cos(ang) * dist, 40, e().WORLD.w - 40),
       y: clamp(u.y + Math.sin(ang) * dist, 40, e().WORLD.h - 40)
     };
+  }
+
+  /* ---------------- T155: 昼夜视野系数 ---------------- */
+  function visionMul(bright) {
+    var min = aiCfg().NIGHT_VISION_MIN;
+    if (typeof bright !== 'number' || isNaN(bright)) bright = 1;
+    return min + (1 - min) * clamp(bright, 0, 1);
+  }
+
+  /* ---------------- T154: 迁移追踪 ---------------- */
+  function setState(u, st) {
+    if (u._aiState !== st) {
+      var cfg = aiCfg();
+      if (cfg.DEBUG && e().trace) e().trace({ name: u.name, faction: u.faction, from: u._aiState || '-', to: st });
+      u._aiState = st;
+    }
+  }
+
+  /**
+   * 主决策（T153）：行为与 legacy 逐字等价；每个出口标注状态。
+   * 宿主每决策周期调用一次。
+   */
+  function think(u) {
+    var E = e(), cfg = aiCfg();
+    if (u.state === 'down' || u.state === 'dead') { setState(u, STATES.IDLE); return; }
+    if (u.rescueChannel > 0 || u.bandageChannel > 0) return;
+
+    /* ---- 奴隶：不主动攻击，跟随主人，遇袭逃跑 ---- */
+    if (u.faction === 'slave') {
+      var sla = u.lastAttacker;
+      if (sla && sla.state !== 'dead' &&
+          !(sla.body.chest.hp <= 0 || sla.body.head.hp <= 0) &&
+          E.dist(u, sla) < 280) {
+        setState(u, STATES.FLEE);
+        u.moveTarget = pointAway(u, sla.x, sla.y, 300);
+        u.attackTarget = null;
+        return;
+      }
+      setState(u, STATES.FOLLOW);
+      var master = null, md = 1e9;
+      var squad = E.livingSquad();
+      for (var mi = 0; mi < squad.length; mi++) {
+        var dM = E.dist(u, squad[mi]);
+        if (dM < md) { md = dM; master = squad[mi]; }
+      }
+      if (master && md > 170) {
+        u.moveTarget = { x: master.x + E.rand(-50, 50), y: master.y + E.rand(-50, 50) };
+      }
+      return;
+    }
+
+    /* ---- 目标有效性校验 ---- */
+    var t = u.attackTarget;
+    if (t && !E.validEnemyFor(u, t)) { t = null; u.attackTarget = null; }
+
+    /* ---- 低血量逃跑：饥饿强盗与野兽 ---- */
+    var coward = (u.faction === 'hungry' || u.faction === 'beast');
+    if (coward && u.fearT <= 0 && E.chestRatio(u) < 0.28) {
+      setState(u, STATES.FLEE);
+      var src = t || u.homePoint || u;
+      u.moveTarget = pointAway(u, src.x, src.y, 340);
+      u.attackTarget = null;
+      u.fearT = 4;
+      return;
+    }
+
+    /* ---- 索敌 ---- */
+    if (!t) t = E.findNearestHostile(u, u.aggro);
+
+    if (t) {
+      /* T156 唯一行为增量：远离地盘则放弃追击 */
+      if (u.homePoint && E.dist(u.homePoint, u) > cfg.CHASE_GIVE_UP) {
+        setState(u, STATES.LEASH);
+        u.attackTarget = null;
+        u.moveTarget = { x: u.homePoint.x, y: u.homePoint.y };
+        return;
+      }
+      setState(u, STATES.CHASE);
+      u.attackTarget = t;
+      u.moveTarget = null;
+      return;
+    }
+
+    /* ---- 卫兵回到岗位 ---- */
+    if (u.faction === 'town' && u.homePoint && E.dist(u, u.homePoint) > cfg.GUARD_LEASH) {
+      setState(u, STATES.LEASH);
+      u.moveTarget = { x: u.homePoint.x, y: u.homePoint.y };
+      return;
+    }
+
+    /* ---- 玩家单位：没有命令就原地待命，绝不自主游荡 ---- */
+    if (u.faction === 'player') { setState(u, STATES.IDLE); return; }
+
+    /* ---- 游荡（卫兵巡城范围更小） ---- */
+    u.wanderT -= E.rand(0.3, 0.5);
+    if (u.wanderT <= 0) {
+      setState(u, STATES.WANDER);
+      u.wanderT = E.rand(3, 8);
+      var hp = u.homePoint || u;
+      var wr = u.faction === 'town' ? cfg.WANDER_TOWN_R : cfg.WANDER_WILD_R;
+      u.moveTarget = {
+        x: clamp(hp.x + E.rand(-wr, wr), 40, E.WORLD.w - 40),
+        y: clamp(hp.y + E.rand(-wr, wr), 40, E.WORLD.h - 40)
+      };
+    } else {
+      setState(u, STATES.IDLE);
+    }
   }
 
   /**
@@ -51,85 +179,12 @@
     return true;
   }
 
-  /**
-   * 主决策：每个 think 周期调用一次（宿主控制节流）。
-   */
-  function think(u) {
-    var E = e();
-    if (u.state === 'down' || u.state === 'dead') return;
-    if (u.rescueChannel > 0 || u.bandageChannel > 0) return;
-
-    /* ---- 奴隶：不主动攻击，跟随主人，遇袭逃跑 ---- */
-    if (u.faction === 'slave') {
-      var sla = u.lastAttacker;
-      if (sla && sla.state !== 'dead' && !(sla.body.chest.hp <= 0 || sla.body.head.hp <= 0) &&
-          E.dist(u, sla) < 280) {
-        u.moveTarget = pointAway(u, sla.x, sla.y, 300);
-        u.attackTarget = null;
-        return;
-      }
-      var master = null, md = 1e9;
-      var squad = E.livingSquad();
-      for (var mi = 0; mi < squad.length; mi++) {
-        var dM = E.dist(u, squad[mi]);
-        if (dM < md) { md = dM; master = squad[mi]; }
-      }
-      if (master && md > 170) {
-        u.moveTarget = { x: master.x + E.rand(-50, 50), y: master.y + E.rand(-50, 50) };
-      }
-      return;
-    }
-
-    /* ---- 目标有效性校验 ---- */
-    var t = u.attackTarget;
-    if (t && !E.validEnemyFor(u, t)) { t = null; u.attackTarget = null; }
-
-    /* ---- 低血量逃跑：饥饿强盗与野兽 ---- */
-    var coward = (u.faction === 'hungry' || u.faction === 'beast');
-    if (coward && u.fearT <= 0 && E.chestRatio(u) < 0.28) {
-      var src = t || u.homePoint || u;
-      u.moveTarget = pointAway(u, src.x, src.y, 340);
-      u.attackTarget = null;
-      u.fearT = 4;
-      return;
-    }
-
-    /* ---- 索敌 ---- */
-    if (!t) t = E.findNearestHostile(u, u.aggro);
-
-    if (t) {
-      u.attackTarget = t;
-      u.moveTarget = null;
-      return;
-    }
-
-    /* ---- 卫兵回到岗位 ---- */
-    if (u.faction === 'town' && u.homePoint && E.dist(u, u.homePoint) > 340) {
-      u.moveTarget = { x: u.homePoint.x, y: u.homePoint.y };
-      return;
-    }
-
-    /* ---- 玩家单位：没有命令就原地待命，绝不自主游荡 ----
-     * （v0.1 起的历史 bug：玩家指令会被随机游荡目标覆盖，
-     *   表现为“点了没反应/走着走着改道”。）*/
-    if (u.faction === 'player') return;
-
-    /* ---- 游荡（卫兵巡城范围更小） ---- */
-    u.wanderT -= E.rand(0.3, 0.5);
-    if (u.wanderT <= 0) {
-      u.wanderT = E.rand(3, 8);
-      var hp = u.homePoint || u;
-      var wr = u.faction === 'town' ? 140 : 260;
-      u.moveTarget = {
-        x: clamp(hp.x + E.rand(-wr, wr), 40, E.WORLD.w - 40),
-        y: clamp(hp.y + E.rand(-wr, wr), 40, E.WORLD.h - 40)
-      };
-    }
-  }
-
   return {
+    STATES: STATES,
     attach: attach,
     think: think,
-    maybeRetaliate: maybeRetaliate
+    maybeRetaliate: maybeRetaliate,
+    visionMul: visionMul,
+    config: aiCfg       /* 单测用：当前配置视图 */
   };
 });
