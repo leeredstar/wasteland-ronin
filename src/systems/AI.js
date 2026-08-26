@@ -133,6 +133,10 @@
     var coward = (u.faction === 'hungry' || u.faction === 'beast');
     if (coward && u.fearT <= 0 && E.chestRatio(u) < 0.28) {
       setState(u, STATES.FLEE);
+      if (!u._barkFled) {
+        u._barkFled = true;
+        if (E.bark && u.faction === 'hungry') E.bark(u, 'flee');
+      }
       var src = t || u.homePoint || u;
       u.moveTarget = pointAway(u, src.x, src.y, 340);
       u.attackTarget = null;
@@ -154,8 +158,17 @@
       setState(u, STATES.CHASE);
       u.attackTarget = t;
       u.moveTarget = null;
+      /* T179 遭遇台词：每次接敌最多喊一次 */
+      if (!u._barkEngage && E.bark && (u.faction === 'bandit' || u.faction === 'hungry')) {
+        u._barkEngage = true;
+        if (E.rand() < 0.6) E.bark(u, 'encounter');
+      }
       return;
     }
+
+    /* 脱战/无目标：重置台词标记 */
+    u._barkEngage = false;
+    if (u.fearT <= 0) u._barkFled = false;
 
     /* ---- 卫兵回到岗位 ---- */
     if (u.faction === 'town' && u.homePoint && E.dist(u, u.homePoint) > cfg.GUARD_LEASH) {
@@ -208,6 +221,16 @@
     think: think,
     maybeRetaliate: maybeRetaliate,
     visionMul: visionMul,
+    /* T175 诱饵选择（纯函数，便于单测）：范围内最近肉块或 null */
+    pickBait: function (u, baits, range, distFn) {
+      var dfn = distFn || e().dist;
+      var best = null, bd = range;
+      for (var i = 0; i < baits.length; i++) {
+        var d = dfn(u, baits[i]);
+        if (d < bd) { bd = d; best = baits[i]; }
+      }
+      return best;
+    },
     config: aiCfg       /* 单测用：当前配置视图 */
   };
 });

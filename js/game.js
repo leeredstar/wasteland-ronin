@@ -488,6 +488,11 @@ AISys.attach({
   },
   balance: (WR.BALANCE && WR.BALANCE.AI) || null,          /* T153/T156 */
   brightness: function () { return brightness(); },         /* T155 夜间视野 */
+  bark: function (u, kind) {                                /* T179 台词 */
+    var table = WR.Barks && WR.Barks[kind];
+    if (!table) return;
+    log(u.name + '：「' + pick(table) + '」', 'sys');
+  },
   trace: function (ev) {                                    /* T154 迁移追踪 */
     aiTraceBuf.push(ev);
     if (aiTraceBuf.length > 120) aiTraceBuf.shift();
@@ -507,7 +512,14 @@ SurvivalSys.attach({
   camps: function () { return camps; }
 });
 function knockDown(attacker, d, part) { CombatSys.knockDown(attacker, d, part); }
-function die(u) { CombatSys.die(u); }
+function die(u) {
+  /* T179 死亡台词（人类敌人） */
+  if ((u.faction === 'bandit' || u.faction === 'hungry') &&
+      WR.Barks && WR.App.rng.next() < 0.5) {
+    log(u.name + '：「' + pick(WR.Barks.death) + '」', 'sys');
+  }
+  CombatSys.die(u);
+}
 
 function dropLoot(u) {
   if (u.looted) return;
@@ -572,11 +584,7 @@ function aiThink(u) {
   /* T159: 诱饵优先——野兽无目标且附近有肉块时被吸引 */
   if (u.isBeast && !u.attackTarget && !u.lastAttacker && baits.length &&
       u.fearT <= 0) {
-    var bb = null, bd2 = 620;
-    for (var bi = 0; bi < baits.length; bi++) {
-      var dB = dist(u, baits[bi]);
-      if (dB < bd2) { bd2 = dB; bb = baits[bi]; }
-    }
+    var bb = (WR.AI.pickBait ? WR.AI.pickBait(u, baits, 620) : null);
     if (bb) {
       u._aiState = 'wander';
       if (dist(u, bb) > 26) {
@@ -662,10 +670,11 @@ function drawBaits() {
 
 /* ---------------- T157 协防 + T166 卫兵支援呼叫 + T168 声望驰援 ---------------- */
 function updateSquadSupport(dt) {
+  var AIC = (WR.BALANCE && WR.BALANCE.AI) || {};
   supportCool -= dt;
   if (supportCool > 0) return;
-  supportCool = 0.5;
-  var RADIUS = 300;
+  supportCool = AIC.SUPPORT_TICK != null ? AIC.SUPPORT_TICK : 0.5;   /* T176 */
+  var RADIUS = AIC.SUPPORT_RADIUS != null ? AIC.SUPPORT_RADIUS : 300;
 
   /* 同阵营协防收集器：isGuardCall=true 时计入支援呼叫统计 */
   function assistAllies(victim, attacker, radius, isGuardCall) {
@@ -692,11 +701,11 @@ function updateSquadSupport(dt) {
 
     assistAllies(v, atk, RADIUS, false);
 
-    /* T166: 城镇遇袭 → 支援呼叫半径扩至 620px */
+    /* T166: 城镇遇袭 → 支援呼叫半径扩至 GUARD_CALL_RADIUS(620) */
     if (v.faction === 'town') {
       for (var ti = 0; ti < towns.length; ti++) {
         if (dist(v, towns[ti]) < towns[ti].r * 1.4) {
-          assistAllies(v, atk, 620, true);
+          assistAllies(v, atk, AIC.GUARD_CALL_RADIUS != null ? AIC.GUARD_CALL_RADIUS : 620, true);
           if (gameTime > guardCallLogCool) {
             guardCallLogCool = gameTime + 12;
             log(towns[ti].name + ' 遇袭！卫兵支援呼叫已发出', 'bad');
@@ -711,12 +720,14 @@ function updateSquadSupport(dt) {
       for (var pi = 0; pi < towns.length; pi++) {
         var tn = towns[pi];
         if (dist(v, tn) > tn.r * 1.2) continue;
-        if ((res.rep[pi] || 0) >= 20) {
+        var repNeed = AIC.REP_ASSIST_MIN != null ? AIC.REP_ASSIST_MIN : 20;
+        if ((res.rep[pi] || 0) >= repNeed) {
+          var repR = AIC.REP_ASSIST_RADIUS != null ? AIC.REP_ASSIST_RADIUS : 420;
           for (var gj = 0; gj < units.length; gj++) {
             var gd = units[gj];
             if (gd.faction !== 'town' || gd.state === 'dead' || isDown(gd)) continue;
             if (gd.attackTarget || gd.moveTarget) continue;
-            if (dist(gd, v) > 420) continue;
+            if (dist(gd, v) > repR) continue;
             if (!validEnemyFor(gd, atk)) continue;
             gd.attackTarget = atk;
             repAssistCount++;
@@ -886,7 +897,12 @@ function updateUnit(u, dt) {
 
   // 思考
   u.thinkT -= dt;
-  if (u.thinkT <= 0) { u.thinkT = rand(0.3, 0.5); aiThink(u); }
+  if (u.thinkT <= 0) {
+    var AIC = (WR.BALANCE && WR.BALANCE.AI) || {};
+    u.thinkT = rand(AIC.THINK_MIN != null ? AIC.THINK_MIN : 0.3,
+                    AIC.THINK_MAX != null ? AIC.THINK_MAX : 0.5);   /* T172 分帧参数化 */
+    aiThink(u);
+  }
 
   // 执行
   var tgt = u.attackTarget;
@@ -3716,8 +3732,28 @@ function drawUnits() {
   }
   list.sort(function (a, b) { return a.y - b.y; });
 
+  var aiDbg = WR.BALANCE && WR.BALANCE.AI && WR.BALANCE.AI.DEBUG;   /* T178 */
+
   for (var k = 0; k < list.length; k++) {
     var u = list[k];
+
+    /* T178: AI 可视化调试——状态文字 + 目标连线（BALANCE.AI.DEBUG 开启） */
+    if (aiDbg && u.faction !== 'player' && u._aiState) {
+      var dbgT = u.attackTarget;
+      if (dbgT) {
+        ctx.strokeStyle = 'rgba(255,120,90,.5)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(u.x, u.y); ctx.lineTo(dbgT.x, dbgT.y); ctx.stroke();
+      } else if (u.moveTarget) {
+        ctx.strokeStyle = 'rgba(150,200,255,.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(u.x, u.y); ctx.lineTo(u.moveTarget.x, u.moveTarget.y); ctx.stroke();
+      }
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(200,220,255,.85)';
+      ctx.fillText('[' + u._aiState + ']', u.x, u.y - 22 * (u.scale || 1));
+    }
 
     ctx.fillStyle = 'rgba(0,0,0,.22)';
     ctx.beginPath();

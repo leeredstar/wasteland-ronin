@@ -19,6 +19,13 @@
       NIGHT_VISION_MIN: 0.6,  /* 深夜视野系数（×白天全值） */
       WANDER_TOWN_R: 140,     /* 卫兵巡城半径 */
       WANDER_WILD_R: 260,     /* 野怪游荡半径 */
+      THINK_MIN: 0.3,         /* T172 决策节流下限(秒)——天然分帧错峰 */
+      THINK_MAX: 0.5,         /* T172 决策节流上限(秒) */
+      SUPPORT_RADIUS: 300,    /* T157 协防半径 */
+      SUPPORT_TICK: 0.5,      /* T176 协防扫描节流(秒)=响应时间上限 */
+      GUARD_CALL_RADIUS: 620, /* T166 城镇支援呼叫半径 */
+      REP_ASSIST_RADIUS: 420, /* T168 声望驰援半径 */
+      REP_ASSIST_MIN: 20,     /* T168 触发驰援的最低声望 */
       DEBUG: false            /* T154: 状态迁移追踪开关 */
     },
 

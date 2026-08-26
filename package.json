@@ -7,6 +7,7 @@
     "smoke": "node test-smoke.js",
     "gate:m2": "node tools/m2-gate.js",
     "gate:m5": "node tools/m5-gate.js",
+    "gate:m6": "node tools/m6-gate.js",
     "roadmap": "node roadmap/tasks.source.js",
     "progress": "node roadmap/progress.js",
     "audit:dom": "node tools/dom-audit.js",

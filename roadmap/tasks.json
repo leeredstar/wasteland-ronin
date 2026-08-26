@@ -1,9 +1,9 @@
 {
  "project": "荒原浪人 Wasteland Ronin — 类Kenshi多人在线演进路线",
  "version": 1,
- "updatedAt": "2026-08-26T01:10:55.742Z",
+ "updatedAt": "2026-08-26T01:22:57.392Z",
  "total": 500,
- "done": 170,
+ "done": 180,
  "phases": [
   {
    "id": "M0",
@@ -1460,80 +1460,80 @@
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "夜间视野缩减使潜行接近成为可行战术",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:13:48.238Z"
   },
   {
    "id": "T172",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "AI 思考分帧 stagger 参数化（性能保护）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:13:48.294Z"
   },
   {
    "id": "T173",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "单测：FSM 每个状态的进入/退出条件覆盖",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:13:48.345Z"
   },
   {
    "id": "T174",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "单测：A* 绕墙用例（构造小型迷宫）",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:22:57.089Z"
   },
   {
    "id": "T175",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "单测：诱饵存在时野兽优先攻击诱饵",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:22:57.140Z"
   },
   {
    "id": "T176",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "单测：协防触发半径与响应时间",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:22:57.191Z"
   },
   {
    "id": "T177",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "调参笔记：追击/逃跑阈值手感记录 outputs/ai-notes.md",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:22:57.239Z"
   },
   {
    "id": "T178",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "AI 可视化调试：叠加显示状态文字与目标连线",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:22:57.289Z"
   },
   {
    "id": "T179",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "敌人台词表：遭遇/逃跑/死亡喊话文本",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:22:57.342Z"
   },
   {
    "id": "T180",
    "phase": "M6",
    "phaseName": "AI 行为深化",
    "title": "M6 门禁：连续观察 30 场遭遇战无明显呆滞或卡死",
-   "status": "todo",
-   "doneAt": null
+   "status": "done",
+   "doneAt": "2026-08-26T01:22:57.392Z"
   },
   {
    "id": "T181",

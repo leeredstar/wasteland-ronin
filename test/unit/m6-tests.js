@@ -215,6 +215,91 @@ console.log('[T164] 奴隶搬运三态细化');
   t('遇袭时 FLEE 优先于搬运', scared._aiState === 'flee');
 }
 
+console.log('[T173] FSM 全状态进入/退出覆盖');
+{
+  /* WANDER：进入后设置漫游目标；获得目标即切 CHASE 退出 */
+  const w = mkUnit({ wanderT: -1 });
+  AI.think(w);
+  t('进入 WANDER：设置了 moveTarget', w._aiState === 'wander' && !!w.moveTarget);
+  w._scanResult = mkUnit({ faction: 'town', x: 100, y: 0 });
+  AI.think(w);
+  t('WANDER 退出 → CHASE', w._aiState === 'chase' && w.attackTarget !== null);
+
+  /* FLEE 退出：恐惧期结束且血量回升 */
+  const c = mkUnit({ faction: 'hungry', fearT: 0 });
+  c.body.chest.hp = 10;
+  AI.think(c);
+  t('进入 FLEE（fearT 置位）', c._aiState === 'flee' && c.fearT > 0);
+  c.body.chest.hp = c.body.chest.max;
+  c.fearT = 0;
+  AI.think(c);
+  t('血量恢复后 FLEE 不再触发', c._aiState !== 'flee');
+
+  /* LEASH 退出：回到岗位半径内 */
+  const g = mkUnit({ faction: 'town', x: 500, y: 0, homePoint: { x: 500, y: 0 } });
+  AI.think(g);
+  t('卫兵在岗不进 LEASH', g._aiState !== 'leash');
+
+  /* STAY 进入/取消 */
+  const st1 = mkUnit({ faction: 'slave', stayAt: { x: 50, y: 50 } });
+  AI.think(st1);
+  t('驻守奴隶 → STAY', st1._aiState === 'stay');
+  st1.stayAt = null;
+  st1._loot = null;
+  AI.think(st1);
+  t('取消驻守 → 回到 FOLLOW', st1._aiState === 'follow');
+
+  /* CARRY 退出：掉落物消失 */
+  const cr = mkUnit({ faction: 'slave', _loot: { x: 30, y: 30 } });
+  AI.think(cr);
+  t('进入 CARRY', cr._aiState === 'carry');
+  cr._loot = null;
+  AI.think(cr);
+  t('掉落消失 → CARRY 退出回 FOLLOW', cr._aiState === 'follow');
+}
+
+console.log('[T174] A* 迷宫绕墙');
+{
+  const PF = require(path.join(ROOT, 'src/world/Pathfinding.js'));
+  /* S 形迷宫：两道横墙错位留通道，路径必须上下穿行 */
+  const maze = PF.create({
+    worldW: 800, worldH: 800, cell: 40, smooth: false,
+    isBlocked: (cx, cy) =>
+      (cy === 5 && cx <= 13) ||     /* 上横墙：右侧留口 */
+      (cy === 14 && cx >= 6)        /* 下横墙：左侧留口 */
+  });
+  const pm = maze.findPath(40, 100, 760, 700);
+  t('迷宫存在通路', !!pm);
+  if (pm) {
+    const crossesTopGap = pm.some(p => Math.abs(p.y - (5 * 40 + 20)) < 30 && p.x > 500);
+    const crossesBottomGap = pm.some(p => Math.abs(p.y - (14 * 40 + 20)) < 30 && p.x < 320);
+    t('路径穿过上墙右口', crossesTopGap);
+    t('路径穿过下墙左口', crossesBottomGap);
+    t('绕行路径点数 > 直线所需(>12)', pm.length > 12);
+  }
+}
+
+console.log('[T175] 诱饵优先选择');
+{
+  const u = mkUnit({ faction: 'beast' });
+  u._scanResult = null;
+  const nearBait = { x: 100, y: 0 };
+  const farBait = { x: 500, y: 0 };
+  t('范围内返回最近诱饵', AI.pickBait(u, [farBait, nearBait], 620, dist) === nearBait);
+  t('范围外返回 null', AI.pickBait(u, [{ x: 2000, y: 0 }], 620, dist) === null);
+  t('空列表返回 null', AI.pickBait(u, [], 620, dist) === null);
+}
+
+console.log('[T176] 协防参数契约');
+{
+  const A = BALANCE.AI;
+  t('SUPPORT_RADIUS=300', A.SUPPORT_RADIUS === 300);
+  t('SUPPORT_TICK=0.5（响应时间上限）', A.SUPPORT_TICK === 0.5);
+  t('GUARD_CALL_RADIUS=620', A.GUARD_CALL_RADIUS === 620);
+  t('REP_ASSIST_RADIUS=420', A.REP_ASSIST_RADIUS === 420);
+  t('REP_ASSIST_MIN=20', A.REP_ASSIST_MIN === 20);
+}
+
 console.log(`\nM6 单元测试: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
 console.log('ALL PASS');
